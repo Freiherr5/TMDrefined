@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from StandardConfig import timingmethod
 import StandardConfig
+from .StandardConfig import timingmethod
 import math
 from pandas.api.types import is_string_dtype
 

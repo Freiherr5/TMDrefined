@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import StandardConfig
-from StandardConfig import timingmethod
+from .StandardConfig import timingmethod
 # ML
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
@@ -11,7 +11,7 @@ from sklearn.model_selection import HalvingGridSearchCV
 # visualization
 from sklearn.tree import export_graphviz
 import graphviz
-from TMDrefined import aa_numeric_by_scale
+from Translate_TMDrefined import aa_numeric_by_scale
 from datetime import date
 import matplotlib.pyplot as plt
 
@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 class ForestTMDrefind:
 
     def __init__(self, df_train_instance_parameters, df_train_labels, best_params, param_dist, search_cv, model,
-                 job_name, path_forest):
+                 job_name, path_forest, start_tmd):
         self.df_train_instance_parameters = df_train_instance_parameters
         self.df_train_labels = df_train_labels
         self.best_params = best_params
@@ -28,11 +28,14 @@ class ForestTMDrefind:
         self.model = model
         self.job_name = job_name
         self.path_forest = path_forest
+        self.start_tmd = start_tmd
 
-
+    # random forest algorithm --> search and train with best params
+    # __________________________________________________________________________________________________________________
     @classmethod
     @timingmethod
-    def make_forest(cls, df_train_instance_parameters, df_train_labels, job_name, n_jobs=1, param_grid=None):
+    def make_forest(cls, df_train_instance_parameters, df_train_labels, job_name, start_tmd=True,
+                    n_jobs=1, param_grid=None):
         # initialize the RandomForestClassifier as clf
         clf = RandomForestClassifier()
 
@@ -71,8 +74,10 @@ class ForestTMDrefind:
               f"best params: {best_params}")
 
         return cls(df_train_instance_parameters, df_train_labels, best_params, param_grid, search_cv, clf_best,
-                   job_name, path_forest)
+                   job_name, path_forest, start_tmd)
 
+    # analysis functions
+    # __________________________________________________________________________________________________________________
     def fetch_a_tree(self):
         path, sep = StandardConfig.find_folderpath()
         StandardConfig.make_directory("output_tree")
@@ -91,7 +96,6 @@ class ForestTMDrefind:
         date_today = date.today()
         graph.render(f"{path}{sep}output_tree{sep}{self.job_name}_sample_tree_dot_{date_today}", view=True)
 
-
     def hyperparameter_summary(self, save_table=False):
         columns = [f"param_{name}" for name in self.param_dist.keys()]
         columns += ["mean_test_error", "std_test_error"]
@@ -103,7 +107,6 @@ class ForestTMDrefind:
             date_today = date.today()
             cv_results_final.to_excel(f"{self.path_forest}{sep}{self.job_name}_hyperparameter_{date_today}.xlsx")
         return cv_results_final
-
 
     def feature_importance(self):
         # Create a series containing feature importance from the model and feature names from the training data
@@ -124,11 +127,9 @@ class ForestTMDrefind:
         plt.savefig(f"{self.path_forest}{sep}{self.job_name}_feature_importance_{date_today}.png", dpi=400,
                     bbox_inches="tight")
 
-
     def predict_labels(self, df_pred_instance_parameters):
         pred_labels = self.model.predict(df_pred_instance_parameters.to_numpy().tolist())
         return pred_labels
-
 
     def test_predict_quality(self, label_test, label_pred, cm_save=False):
 
@@ -148,6 +149,11 @@ class ForestTMDrefind:
             cm.figure_.savefig(f"{self.path_forest}{sep}{self.job_name}_confusion_matrix_{date_today}.png")
         else:
             ConfusionMatrixDisplay(confusion_matrix=cm).plot()
+
+    # predict based on sequences + initial predicted JMD|TMD intersection
+    # __________________________________________________________________________________________________________________
+    def pred_from_seq(self, sequence, pos_intersect):
+        pass
 
 
 # debugging
