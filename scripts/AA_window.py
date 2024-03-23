@@ -18,27 +18,26 @@ def get_aa_window(window_size: int, aa_seq: str, aa_position: int, start_pos: bo
     _______
     window of set window_size left and right of the slicing position
     """
-    if __name__ == 'AA_window':
 
-        start = aa_position - window_size - 1
-        start_of_stop = aa_position - 1
-        if start_pos is False:
-            start = start + 1
-            start_of_stop = start_of_stop + 1
+    start = aa_position - window_size - 1
+    start_of_stop = aa_position - 1
+    if start_pos is False:
+        start = start + 1
+        start_of_stop = start_of_stop + 1
 
-        list_left_right_window = []
-        for pos in [start, start_of_stop]:
-            if pos <= -4:                              # no AA at label window side
-                list_left_right_window.append(np.nan)
-            elif pos < 0:                              # less than 4 AA at label window side
-                list_left_right_window.append(aa_seq[0: pos + window_size])
-            else:                                      # 4 AA at label window side
-                list_left_right_window.append(aa_seq[pos: pos + window_size])
+    list_left_right_window = []
+    for pos in [start, start_of_stop]:
+        if pos <= -4:                              # no AA at label window side
+            list_left_right_window.append(np.nan)
+        elif pos < 0:                              # less than 4 AA at label window side
+            list_left_right_window.append(aa_seq[0: pos + window_size])
+        else:                                      # 4 AA at label window side
+            list_left_right_window.append(aa_seq[pos: pos + window_size])
 
-        if list_left_right_window is []:
-            list_left_right_window = [np.nan, np.nan]
+    if list_left_right_window is []:
+        list_left_right_window = [np.nan, np.nan]
 
-        return list_left_right_window
+    return list_left_right_window
 
 
 def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd_intersect: int, start_pos: bool,
@@ -60,36 +59,35 @@ def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd
     df_list_labels : pd.DataFrame with labels of a specific protein
     """
 
-    if __name__ == 'AA_window':
-        columns_window = ["ID", "window_left", "window_right", "label", column_pos_in_seq, "norm_intersect_pos"]
-        if more_columns is not None:
-            columns_window.extend(list(more_columns.keys()))
+    columns_window = ["ID", "window_left", "window_right", "label", column_pos_in_seq, "norm_intersect_pos"]
+    if more_columns is not None:
+        columns_window.extend(list(more_columns.keys()))
 
-        # generate positive-label
-        window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect, start_pos=start_pos)
-        list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], 1, tmd_jmd_intersect,
-                        tmd_jmd_intersect/len(aa_seq)]]
-        if more_columns is not None:
-            list_labels.extend(list(more_columns.values()))
+    # generate positive-label
+    window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect, start_pos=start_pos)
+    list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], 1, tmd_jmd_intersect,
+                    tmd_jmd_intersect/len(aa_seq)]]
+    if more_columns is not None:
+        list_labels.extend(list(more_columns.values()))
 
-        # generate negative N/C-term label
-        i = 1
-        while i < window_size:
-            left_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect - i,
-                                                  start_pos=start_pos)
-            right_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect + i,
-                                                   start_pos=start_pos)
-            sublist = [
-                [f"{name_label}__-{i}", left_shift_window_seq[0], left_shift_window_seq[1], 0, tmd_jmd_intersect - i,
-                 (tmd_jmd_intersect-i)/len(aa_seq)],
-                [f"{name_label}__{i}", right_shift_window_seq[0], right_shift_window_seq[1], 0, tmd_jmd_intersect + i,
-                 (tmd_jmd_intersect+i)/len(aa_seq)]]
-            if more_columns is not None:
-                sublist.extend(list(more_columns.values()))
-            list_labels.extend(sublist)
-            i += 1
-        df_list_labels = pd.DataFrame(list_labels, columns=columns_window)
-        return df_list_labels
+    # generate negative N/C-term label
+    i = 1
+    while i < window_size:
+        left_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect - i,
+                                              start_pos=start_pos)
+        right_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect + i,
+                                               start_pos=start_pos)
+        sublist = [
+            [f"{name_label}__-{i}", left_shift_window_seq[0], left_shift_window_seq[1], 0, tmd_jmd_intersect - i,
+             (tmd_jmd_intersect-i)/len(aa_seq)],
+            [f"{name_label}__{i}", right_shift_window_seq[0], right_shift_window_seq[1], 0, tmd_jmd_intersect + i,
+             (tmd_jmd_intersect+i)/len(aa_seq)]]
+        if more_columns is not None:
+            sublist.extend(list(more_columns.values()))
+        list_labels.extend(sublist)
+        i += 1
+    df_list_labels = pd.DataFrame(list_labels, columns=columns_window)
+    return df_list_labels
 
 
 def label_describe(df):
@@ -104,29 +102,28 @@ def label_describe(df):
     _______
     df_label_describe : pd.DataFrame.describe() method applied slice wise on original label_df
     """
-    if __name__ == 'AA_window':
-        df_label_search_list = list(dict.fromkeys([str(index).split("__")[0] for index in df.index.tolist()]))
+    df_label_search_list = list(dict.fromkeys([str(index).split("__")[0] for index in df.index.tolist()]))
 
-        list_describe = []
-        for query in df_label_search_list:
-            df_slice = df.reset_index()[df.reset_index()["ID"].str.contains(query)]
-            arr_slice_positives = np.array([str(id_tag).split("__")[0] for id_tag in df_slice["ID"].tolist()])
-            filter_list_slice_label = np.where(arr_slice_positives == query)
-            df_slice = df_slice.iloc[filter_list_slice_label]
+    list_describe = []
+    for query in df_label_search_list:
+        df_slice = df.reset_index()[df.reset_index()["ID"].str.contains(query)]
+        arr_slice_positives = np.array([str(id_tag).split("__")[0] for id_tag in df_slice["ID"].tolist()])
+        filter_list_slice_label = np.where(arr_slice_positives == query)
+        df_slice = df_slice.iloc[filter_list_slice_label]
 
-            row, column = df_slice.shape
-            count_positives = df_slice["label"].to_numpy().tolist().count(1)
-            percent_positives = f"{count_positives} / {row}"
-            list_describe.append([query, count_positives, percent_positives])
-        label_wise_columns = ["ID", "positive_count", "positive_percent"]
-        df_label_wise = pd.DataFrame(list_describe, columns=label_wise_columns)
+        row, column = df_slice.shape
+        count_positives = df_slice["label"].to_numpy().tolist().count(1)
+        percent_positives = f"{count_positives} / {row}"
+        list_describe.append([query, count_positives, percent_positives])
+    label_wise_columns = ["ID", "positive_count", "positive_percent"]
+    df_label_wise = pd.DataFrame(list_describe, columns=label_wise_columns)
 
-        describe_all_labels_columns = ["average_positive", "min", "max", "ID_count"]
-        labels_pos = df_label_wise["positive_count"].to_numpy().tolist()
-        list_describe_all_labels = [f"{round(np.mean(labels_pos), 2)} / {row}", f"{np.min(labels_pos)} / {row}",
-                                    f"{np.max(labels_pos)} / {row}", f"{len(df_label_search_list)}"]
-        df_label_describe = pd.Series(list_describe_all_labels).set_axis(describe_all_labels_columns)
-        return df_label_wise, df_label_describe
+    describe_all_labels_columns = ["average_positive", "min", "max", "ID_count"]
+    labels_pos = df_label_wise["positive_count"].to_numpy().tolist()
+    list_describe_all_labels = [f"{round(np.mean(labels_pos), 2)} / {row}", f"{np.min(labels_pos)} / {row}",
+                                f"{np.max(labels_pos)} / {row}", f"{len(df_label_search_list)}"]
+    df_label_describe = pd.Series(list_describe_all_labels).set_axis(describe_all_labels_columns)
+    return df_label_wise, df_label_describe
 # ______________________________________________________________________________________________________________________
 
 

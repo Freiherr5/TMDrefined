@@ -9,6 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import HalvingGridSearchCV
+from .AA_window import get_aa_window_labels
 # visualization
 from sklearn.tree import export_graphviz
 import graphviz
@@ -80,8 +81,6 @@ class ForestTMDrefind:
     # analysis functions
     # __________________________________________________________________________________________________________________
     def fetch_a_tree(self):
-        path, sep = find_folderpath()
-        make_directory("output_tree")
         tree_number = np.random.randint(self.best_params["n_estimators"], size=1)[0]
         tree = self.model.estimators_[tree_number]
         dot_data = export_graphviz(tree,
@@ -95,7 +94,7 @@ class ForestTMDrefind:
         graph = graphviz.Source(dot_data)
         graph.format = "png"
         date_today = date.today()
-        graph.render(f"{path}{sep}output_tree{sep}{self.job_name}_sample_tree_dot_{date_today}", view=True)
+        graph.render(f"{self.path_forest}{sep}{self.job_name}_sample_tree_dot_{date_today}", view=True)
 
     def hyperparameter_summary(self, save_table=False):
         columns = [f"param_{name}" for name in self.param_dist.keys()]
@@ -179,8 +178,23 @@ class ForestTMDrefind:
 
     # predict based on sequences + initial predicted JMD|TMD intersection
     # __________________________________________________________________________________________________________________
-    def pred_from_seq(self, sequence, pos_intersect):
-        pass
+    def pred_from_seq(self, entry_tag, sequence, pos_intersect):
+        df_sequence_windows = get_aa_window_labels(window_size=12, aa_seq=sequence, name_label="query",
+                                                   tmd_jmd_intersect=pos_intersect, start_pos=self.start_tmd)
+        df_sequence_windows_filter = df_sequence_windows.dropna().set_index("ID")
+
+        feature_importance = pd.Series(self.model.feature_importances_,
+                                       index=self.df_train_instance_parameters.columns).sort_values(ascending=False)
+        scale_labels = feature_importance.index.tolist()  # scale_labels are the scale_id in scale_cat
+
+        pos_seq_list = df_sequence_windows_filter["pos_in_seq"].to_numpy().tolist()
+        scale_df, not_used = aa_numeric_by_scale(feature_df=df_sequence_windows_filter[["window_left", "window_right"]],
+                                                 label_df=df_sequence_windows_filter["label"],
+                                                 scale_df_filter=scale_labels)
+        pred_proba_window = self.model.predict_proba(scale_df.to_numpy().tolist()).tolist()
+        max_index = pred_proba_window.index(max(pred_proba_window))
+        best_pos = pos_seq_list[max_index]
+        return [entry_tag, best_pos]
 
 
 # debugging
