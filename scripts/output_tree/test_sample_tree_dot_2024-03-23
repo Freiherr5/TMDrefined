@@ -1,0 +1,33 @@
+digraph Tree {
+node [shape=box, style="filled, rounded", color="black", fontname="helvetica"] ;
+edge [fontname="helvetica"] ;
+0 [label="BURA740101 <= 0.018\ngini = 0.415\nsamples = 100.0%\nvalue = [0.706, 0.294]", fillcolor="#f0b58b"] ;
+1 [label="BURA740101 <= -0.174\ngini = 0.397\nsamples = 50.4%\nvalue = [0.727, 0.273]", fillcolor="#efb083"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="BURA740101 <= -0.176\ngini = 0.457\nsamples = 1.8%\nvalue = [0.647, 0.353]", fillcolor="#f3c6a5"] ;
+1 -> 2 ;
+3 [label="gini = 0.443\nsamples = 1.7%\nvalue = [0.669, 0.331]", fillcolor="#f2bf9b"] ;
+2 -> 3 ;
+4 [label="gini = 0.397\nsamples = 0.1%\nvalue = [0.273, 0.727]", fillcolor="#83c2ef"] ;
+2 -> 4 ;
+5 [label="CHAM830104 <= -0.222\ngini = 0.394\nsamples = 48.6%\nvalue = [0.731, 0.269]", fillcolor="#efaf82"] ;
+1 -> 5 ;
+6 [label="gini = 0.287\nsamples = 2.6%\nvalue = [0.826, 0.174]", fillcolor="#ea9c63"] ;
+5 -> 6 ;
+7 [label="gini = 0.399\nsamples = 46.0%\nvalue = [0.725, 0.275]", fillcolor="#efb184"] ;
+5 -> 7 ;
+8 [label="BURA740101 <= 0.019\ngini = 0.432\nsamples = 49.6%\nvalue = [0.685, 0.315]", fillcolor="#f1bb94"] ;
+0 -> 8 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+9 [label="BURA740101 <= 0.018\ngini = 0.404\nsamples = 0.1%\nvalue = [0.281, 0.719]", fillcolor="#86c3ef"] ;
+8 -> 9 ;
+10 [label="gini = 0.0\nsamples = 0.0%\nvalue = [0.0, 1.0]", fillcolor="#399de5"] ;
+9 -> 10 ;
+11 [label="gini = 0.461\nsamples = 0.1%\nvalue = [0.36, 0.64]", fillcolor="#a8d4f4"] ;
+9 -> 11 ;
+12 [label="BURA740101 <= 0.08\ngini = 0.431\nsamples = 49.4%\nvalue = [0.686, 0.314]", fillcolor="#f1bb94"] ;
+8 -> 12 ;
+13 [label="gini = 0.418\nsamples = 25.2%\nvalue = [0.703, 0.297]", fillcolor="#f0b68d"] ;
+12 -> 13 ;
+14 [label="gini = 0.443\nsamples = 24.3%\nvalue = [0.669, 0.331]", fillcolor="#f2bf9b"] ;
+12 -> 14 ;
+}

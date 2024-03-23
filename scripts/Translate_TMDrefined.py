@@ -1,13 +1,13 @@
 import pandas as pd
 import numpy as np
-import StandardConfig
-from .StandardConfig import timingmethod
+from StandardConfig import timingmethod
+from StandardConfig import find_folderpath
 import math
 from pandas.api.types import is_string_dtype
 
 # localization of script
 # ______________________________________________________________________________________________________________________
-path, sep = StandardConfig.find_folderpath()
+path, sep = find_folderpath()
 
 
 # creating the input for the model

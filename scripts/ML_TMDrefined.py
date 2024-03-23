@@ -1,8 +1,9 @@
 # data handling
 import pandas as pd
 import numpy as np
-import StandardConfig
-from .StandardConfig import timingmethod
+from StandardConfig import timingmethod
+from StandardConfig import find_folderpath
+from StandardConfig import make_directory
 # ML
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
@@ -55,10 +56,10 @@ class ForestTMDrefind:
                                          scoring='neg_mean_absolute_error').fit(df_train_instance_parameters.
                                                                                 to_numpy().tolist(), df_train_labels.
                                                                                 to_numpy().tolist()))
-        path, sep = StandardConfig.find_folderpath()
+        path, sep = find_folderpath()
         date_today = date.today()
         path_forest = f"output_forest_model_[{job_name}]_{date_today}"
-        StandardConfig.make_directory(path_forest)
+        make_directory(path_forest)
 
         # output of search:
         best_params = search_cv.best_params_
@@ -79,8 +80,8 @@ class ForestTMDrefind:
     # analysis functions
     # __________________________________________________________________________________________________________________
     def fetch_a_tree(self):
-        path, sep = StandardConfig.find_folderpath()
-        StandardConfig.make_directory("output_tree")
+        path, sep = find_folderpath()
+        make_directory("output_tree")
         tree_number = np.random.randint(self.best_params["n_estimators"], size=1)[0]
         tree = self.model.estimators_[tree_number]
         dot_data = export_graphviz(tree,
@@ -111,18 +112,44 @@ class ForestTMDrefind:
     def feature_importance(self):
         # Create a series containing feature importance from the model and feature names from the training data
 
+        # setup for colored bar plot and legend referring to the meaning based on AAOntology categories [Breimann, 24c]
+        aaontology_colors_hex = {'ASA/Volume': "#3680b4",
+                                 'Polarity': "#fddc22",
+                                 'Structure-Activity': "#8c5e56",
+                                 'Composition': "#ff9232",
+                                 'Others': "#7f7f7f",
+                                 'Shape': "#37c0ce",
+                                 'Conformation': "#3d9f47",
+                                 'Energy': "#d54141"
+                                 }
+
+        path_to_scales_df = f"{path.split("scripts")[0]}_scales{sep}scales_cat.xlsx"
+        # scale_cat allows for mapping of categories
+        scale_cat_df = pd.read_excel(path_to_scales_df).set_index("scale_id")
+
         feature_importance = pd.Series(self.model.feature_importances_,
                                        index=self.df_train_instance_parameters.columns).sort_values(ascending=False)
         data = feature_importance.tolist()
-        labels = feature_importance.index.tolist()
-        print(feature_importance)
-        # Plot a simple bar chart
+        scale_labels = feature_importance.index.tolist()   # scale_labels are the scale_id in scale_cat
+        # generate mapping colors on bars for each scale
 
+        list_aao_color_for_bar = []
+        for labels in scale_labels:
+            color_tag = scale_cat_df.loc[labels, "category"]
+            get_aao_color = aaontology_colors_hex[color_tag]
+            list_aao_color_for_bar.append(get_aao_color)
+
+        # Plot a simple bar chart
         fig, ax = plt.subplots()
-        ax.bar(labels, data)
-        ax.set_xticklabels(labels, rotation=45, ha="right", fontweight="bold")
+        ax.bar(scale_labels, data, color=list_aao_color_for_bar)
+        ax.set_xticklabels(scale_labels, rotation=45, ha="right", fontweight="bold")
         ax.set_title("Feature Importance", fontsize=20, fontweight="bold")
         ax.spines[['right', 'top']].set_visible(False)
+        # for legend
+        labels_legend = list(aaontology_colors_hex.keys())
+        handles = [plt.Rectangle((0, 0), 1, 1, color=aaontology_colors_hex[label]) for label in labels_legend]
+        ax.legend(handles, labels_legend)
+        # saving
         date_today = date.today()
         plt.savefig(f"{self.path_forest}{sep}{self.job_name}_feature_importance_{date_today}.png", dpi=400,
                     bbox_inches="tight")
@@ -159,7 +186,7 @@ class ForestTMDrefind:
 # debugging
 # ______________________________________________________________________________________________________________________
 if __name__ == "__main__":
-    path, sep = StandardConfig.find_folderpath()
+    path, sep = find_folderpath()
     list_scale_names = ["BURA740101", "CHAM830104"]
     label_df_test = (pd.read_excel(f"{path.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
                      .set_index("ID"))
