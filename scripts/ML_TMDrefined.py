@@ -1,9 +1,9 @@
 # data handling
 import pandas as pd
 import numpy as np
-from StandardConfig import timingmethod
-from StandardConfig import find_folderpath
-from StandardConfig import make_directory
+from .StandardConfig import timingmethod
+from .StandardConfig import find_folderpath
+from .StandardConfig import make_directory
 # ML
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
@@ -12,7 +12,7 @@ from sklearn.model_selection import HalvingGridSearchCV
 # visualization
 from sklearn.tree import export_graphviz
 import graphviz
-from Translate_TMDrefined import aa_numeric_by_scale
+from .Translate_TMDrefined import aa_numeric_by_scale
 from datetime import date
 import matplotlib.pyplot as plt
 

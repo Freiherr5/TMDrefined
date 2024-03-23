@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
-from StandardConfig import timingmethod
-from StandardConfig import find_folderpath
+from .StandardConfig import timingmethod
+from .StandardConfig import find_folderpath
 import math
 from pandas.api.types import is_string_dtype
 
