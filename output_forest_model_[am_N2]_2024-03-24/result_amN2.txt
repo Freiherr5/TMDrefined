@@ -1,0 +1,9 @@
+Begin process:  14:42:52
+Path /home/freiherr/PycharmProjects/TMDrefined/output_forest_model_[am_N2]_2024-03-24 has been created
+given parameters: {'n_estimators': array([100, 108, 116, 124, 132, 140, 148, 156, 164, 172, 180, 188, 196,
+       204, 212, 220, 228, 236, 244, 252, 260, 268, 276, 284, 292, 300,
+       308, 316, 324, 332, 340, 348, 356, 364, 372, 380, 388, 396, 404,
+       412, 420, 428, 436, 444, 452, 460, 468, 476, 484, 492, 500]), 'max_depth': array([ 3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+       20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]), 'max_leaf_nodes': array([10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]), 'class_weight': ['balanced'], 'bootstrap': [True], 'n_jobs': [6], 'criterion': ['gini']} with HalvingGridSearchCV gave following best-performing parameter combi:best params: {'bootstrap': True, 'class_weight': 'balanced', 'criterion': 'gini', 'max_depth': 15, 'max_leaf_nodes': 20, 'n_estimators': 340, 'n_jobs': 6}
+End process:  02:20:39
+Process time: 41866.81 sec
