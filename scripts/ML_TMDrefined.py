@@ -217,7 +217,7 @@ class ForestTMDrefind:
                 flag_set = True
 
         max_index = pos_proba.index(max(pos_proba))
-        best_pos = pos_seq_list[max_index]
+        best_pos = pos_seq_list[pos_proba_pre.index(max(pos_proba_pre))]  # pos_seq_list same order as proba
 
         # visualize
         start = int(pos_intersect)
@@ -226,7 +226,17 @@ class ForestTMDrefind:
         seq_slice_list = list(sequence[start-11: start+12])
         fig2, ax2 = plt.subplots()
         array24 = np.linspace(1,23,23, dtype=int)
-        ax2.bar(array24, pos_proba, width=0.5)
+        # make color map because....
+        color_tmd = "#d9bd82"  # yellow
+        color_jmd = "#99c0de"  # blue
+        if not self.start_tmd:
+            color_tmd, color_jmd = color_jmd, color_tmd
+        color_list_left = [color_jmd]*max_index
+        color_list_right = [color_tmd]*(24-max_index)
+        color_list_left.extend(color_list_right)
+        (print(len(color_list_left), color_list_left))
+        # make plot
+        ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
         ax2.set_xticks(array24)
         ax2.set_xticklabels(seq_slice_list, rotation=0, ha="center", fontweight="bold")
         ax2.set_title(f"{entry_tag} TMD|JMD intersection probability", fontsize=20, fontweight="bold")
