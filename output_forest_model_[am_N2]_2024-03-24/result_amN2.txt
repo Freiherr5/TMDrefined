@@ -11,3 +11,9 @@ Process time: 41866.81 sec
 Accuracy: 0.7233333333333334
 Precision: 0.3828125
 Recall: 0.9245283018867925
+
+
+version 2 performs WORSE with just normalized!!!!
+Accuracy: 0.68
+Precision: 0.34532374100719426
+Recall: 0.9056603773584906
