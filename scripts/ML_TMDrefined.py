@@ -43,17 +43,17 @@ class ForestTMDrefind:
 
         # parameter distribution
         if param_grid is None:
-            param_grid = {'n_estimators': np.linspace(100, 500, 51, dtype=int),
-                          'max_depth': np.linspace(3, 30, 28, dtype=int),
-                          'max_leaf_nodes': np.linspace(10, 20, 11, dtype=int),
+            param_grid = {'n_estimators': np.linspace(300, 500, 21, dtype=int),
+                          'max_depth': np.linspace(10, 30, 21, dtype=int),
+                          'max_leaf_nodes': np.linspace(15, 35, 21, dtype=int),
                           'class_weight': ["balanced"],
                           'bootstrap': [True],
                           'n_jobs': [n_jobs],
                           'criterion': ["gini"]
                           }
-            # 51*28*11 = 14,586 different combinations of current parameters, would be too time intensive!
+            # 21*21*21 = 9,261 different combinations of current parameters, would be too time intensive!
 
-        search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto",
+        search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto", cv=5,
                                          scoring='neg_mean_absolute_error').fit(df_train_instance_parameters.
                                                                                 to_numpy().tolist(), df_train_labels.
                                                                                 to_numpy().tolist()))
@@ -234,7 +234,6 @@ class ForestTMDrefind:
         color_list_left = [color_jmd]*max_index
         color_list_right = [color_tmd]*(24-max_index)
         color_list_left.extend(color_list_right)
-        (print(len(color_list_left), color_list_left))
         # make plot
         ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
         ax2.set_xticks(array24)
