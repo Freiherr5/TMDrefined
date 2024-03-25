@@ -6,7 +6,8 @@ from .StandardConfig import find_folderpath
 from .StandardConfig import make_directory
 # ML
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score, ConfusionMatrixDisplay
+from sklearn.metrics import (accuracy_score, confusion_matrix, precision_score, recall_score, f1_score,
+                             ConfusionMatrixDisplay)
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import HalvingGridSearchCV
 from .AA_window import get_aa_window_labels
@@ -43,15 +44,17 @@ class ForestTMDrefind:
 
         # parameter distribution
         if param_grid is None:
-            param_grid = {'n_estimators': np.linspace(300, 500, 21, dtype=int),
-                          'max_depth': np.linspace(10, 30, 21, dtype=int),
-                          'max_leaf_nodes': np.linspace(15, 35, 21, dtype=int),
-                          'class_weight': ["balanced"],
+            param_grid = {'n_estimators': np.linspace(300, 700, 5, dtype=int),
+                          'max_depth': np.linspace(10, 40, 7, dtype=int),
+                          'max_leaf_nodes': np.linspace(20, 80, 9, dtype=int),
+                          'max_samples': [0.6, 0.8, 1.0],
+                          'verbose': [0],
+                          'ccp_alpha': [0, 0.005, 0.01, 0.015, 0.02],
+                          'class_weight': ["balanced_subsample"],
                           'bootstrap': [True],
                           'n_jobs': [n_jobs],
                           'criterion': ["gini"]
                           }
-            # 21*21*21 = 9,261 different combinations of current parameters, would be too time intensive!
 
         search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto", cv=5,
                                          scoring='neg_mean_absolute_error').fit(df_train_instance_parameters.
@@ -171,10 +174,12 @@ class ForestTMDrefind:
         accuracy = accuracy_score(label_test, label_pred)
         precision = precision_score(label_test, label_pred)
         recall = recall_score(label_test, label_pred)
+        f1 = f1_score(label_test, label_pred)
 
         print("Accuracy:", accuracy)
         print("Precision:", precision)
         print("Recall:", recall)
+        print("F1: ", f1)
 
         # Create the confusion matrix
         cm = confusion_matrix(label_test, label_pred)
