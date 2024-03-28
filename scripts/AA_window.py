@@ -41,7 +41,7 @@ def get_aa_window(window_size: int, aa_seq: str, aa_position: int, start_pos: bo
 
 
 def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd_intersect: int, start_pos: bool,
-                         column_pos_in_seq: str = "pos_in_seq", more_columns: dict = None):
+                         column_pos_in_seq: str = "pos_in_seq", more_columns: dict = None, range_window: int = None):
     """
     Generates positive and negative labels
 
@@ -63,16 +63,21 @@ def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd
     if more_columns is not None:
         columns_window.extend(list(more_columns.keys()))
 
-    # generate positive-label
+    # generate first-negative-label
     window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect, start_pos=start_pos)
-    list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], 1, tmd_jmd_intersect,
+    list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], 0, tmd_jmd_intersect,
                     tmd_jmd_intersect/len(aa_seq)]]
     if more_columns is not None:
         list_labels.extend(list(more_columns.values()))
 
     # generate negative N/C-term label
+    if range_window is None:
+        range_window = window_size
+    elif not isinstance(range_window, int):
+        range_window = window_size
+
     i = 1
-    while i < window_size:
+    while i < int(range_window):
         left_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect - i,
                                               start_pos=start_pos)
         right_shift_window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect + i,
@@ -138,7 +143,8 @@ class AAwindowrizer:
 
     @classmethod
     def get_aa_window_df(cls, window_size: int, df, column_id: str, column_seq: str, column_aa_position: str,
-                         start_pos: bool = True, column_pos_in_seq: str = None, more_columns_from_df: list = None):
+                         start_pos: bool = True, column_pos_in_seq: str = None, more_columns_from_df: list = None,
+                         range_window: int = None):
         """
         Parameters
         __________
@@ -176,16 +182,18 @@ class AAwindowrizer:
                 aa_window_labeled_sub_df = get_aa_window_labels(window_size=window_size, aa_seq=seq, name_label=id_tag,
                                                                 tmd_jmd_intersect=int(pos), start_pos=start_pos,
                                                                 more_columns=more_columns_entry,
-                                                                column_pos_in_seq=column_pos_in_seq)
+                                                                column_pos_in_seq=column_pos_in_seq,
+                                                                range_window=range_window)
                 aa_window_labeled = aa_window_labeled_sub_df.to_numpy().tolist()
                 list_aa_window_labeled.extend(aa_window_labeled)
 
         if aa_window_labeled_sub_df is not None:
             column_name = aa_window_labeled_sub_df.columns
             df_aa_window_labeled = pd.DataFrame(list_aa_window_labeled, columns=column_name).set_index(column_name[0])
+            df_aa_window_labeled_filter = df_aa_window_labeled.dropna(how="any")
         else:
             raise ValueError(f"An error has occurred, please check if the correct types have been inputted.")
-        return cls(df_aa_window_labeled)
+        return cls(df_aa_window_labeled_filter)
 
     @classmethod
     def modify_label_by_ident_column(cls, df_label: pd.DataFrame, df_compare: pd.DataFrame, column_id: str,
