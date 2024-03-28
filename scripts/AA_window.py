@@ -41,7 +41,8 @@ def get_aa_window(window_size: int, aa_seq: str, aa_position: int, start_pos: bo
 
 
 def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd_intersect: int, start_pos: bool,
-                         column_pos_in_seq: str = "pos_in_seq", more_columns: dict = None, range_window: int = None):
+                         column_pos_in_seq: str = "pos_in_seq", more_columns: dict = None, range_window: int = None,
+                         start_set_positive: bool = False):
     """
     Generates positive and negative labels
 
@@ -63,9 +64,16 @@ def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd
     if more_columns is not None:
         columns_window.extend(list(more_columns.keys()))
 
+    if not isinstance(start_set_positive, bool):
+        label_set = 0
+    elif not start_set_positive:
+        label_set = 0
+    else:
+        label_set = 1
+
     # generate first-negative-label
     window_seq = get_aa_window(window_size, aa_seq=aa_seq, aa_position=tmd_jmd_intersect, start_pos=start_pos)
-    list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], 0, tmd_jmd_intersect,
+    list_labels = [[f"{name_label}__0", window_seq[0], window_seq[1], label_set, tmd_jmd_intersect,
                     tmd_jmd_intersect/len(aa_seq)]]
     if more_columns is not None:
         list_labels.extend(list(more_columns.values()))
@@ -95,6 +103,14 @@ def get_aa_window_labels(window_size: int, aa_seq: str, name_label: str, tmd_jmd
     return df_list_labels
 
 
+def get_df_slice(id_string, df):
+    df_slice_from_id = df.reset_index()[df.reset_index()["ID"].str.contains(id_string)]
+    arr_slice_positives = np.array([str(id_tag).split("__")[0] for id_tag in df_slice_from_id["ID"].tolist()])
+    filter_list_slice_label = np.where(arr_slice_positives == id_string)
+    df_slice_from_id = df_slice_from_id.iloc[filter_list_slice_label]
+    return df_slice_from_id
+
+
 def label_describe(df):
     """
     purely an attribute for get_aa_window_df() and modify_label_by_ident_column() --> how many positive labels?
@@ -111,11 +127,7 @@ def label_describe(df):
 
     list_describe = []
     for query in df_label_search_list:
-        df_slice = df.reset_index()[df.reset_index()["ID"].str.contains(query)]
-        arr_slice_positives = np.array([str(id_tag).split("__")[0] for id_tag in df_slice["ID"].tolist()])
-        filter_list_slice_label = np.where(arr_slice_positives == query)
-        df_slice = df_slice.iloc[filter_list_slice_label]
-
+        df_slice = get_df_slice(query, df)
         row, column = df_slice.shape
         count_positives = df_slice["label"].to_numpy().tolist().count(1)
         percent_positives = f"{count_positives} / {row}"
@@ -125,6 +137,8 @@ def label_describe(df):
 
     describe_all_labels_columns = ["average_positive", "min", "max", "ID_count"]
     labels_pos = df_label_wise["positive_count"].to_numpy().tolist()
+    df_slice = get_df_slice(df_label_search_list[0], df)
+    row, column = df_slice.shape
     list_describe_all_labels = [f"{round(np.mean(labels_pos), 2)} / {row}", f"{np.min(labels_pos)} / {row}",
                                 f"{np.max(labels_pos)} / {row}", f"{len(df_label_search_list)}"]
     df_label_describe = pd.Series(list_describe_all_labels).set_axis(describe_all_labels_columns)
@@ -144,7 +158,7 @@ class AAwindowrizer:
     @classmethod
     def get_aa_window_df(cls, window_size: int, df, column_id: str, column_seq: str, column_aa_position: str,
                          start_pos: bool = True, column_pos_in_seq: str = None, more_columns_from_df: list = None,
-                         range_window: int = None):
+                         range_window: int = None, start_set_positive: bool = False):
         """
         Parameters
         __________
@@ -183,7 +197,8 @@ class AAwindowrizer:
                                                                 tmd_jmd_intersect=int(pos), start_pos=start_pos,
                                                                 more_columns=more_columns_entry,
                                                                 column_pos_in_seq=column_pos_in_seq,
-                                                                range_window=range_window)
+                                                                range_window=range_window,
+                                                                start_set_positive=start_set_positive)
                 aa_window_labeled = aa_window_labeled_sub_df.to_numpy().tolist()
                 list_aa_window_labeled.extend(aa_window_labeled)
 
@@ -243,6 +258,13 @@ class AAwindowrizer:
                     if value in list_available_pos:  # is the seq pos in the label list?
                         id_df_label = list_id[index_df_label_list[list_available_pos.index(int(value))]]
                         df_label.loc[id_df_label, "label"] = 1
+
+        # remove all entries that are fully 0
+        df_label_search_list = list(dict.fromkeys([str(index).split("__")[0] for index in df_label.index.tolist()]))
+        for query in df_label_search_list:
+            df_slice = get_df_slice(query, df_label).set_index("ID")
+            if 1 not in df_slice["label"].to_numpy().tolist():
+                df_label = df_label.drop(df_slice.index.tolist(), axis=0)
         return cls(df_label)
 
     # __________________________________________________________________________________________________________________

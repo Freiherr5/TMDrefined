@@ -1,1 +1,0 @@
-{'bootstrap': [True], 'class_weight': ['balanced'], 'criterion': ['gini'], 'max_depth': [15], 'max_leaf_nodes': [20], 'n_estimators': [340], 'n_jobs': [6]}
