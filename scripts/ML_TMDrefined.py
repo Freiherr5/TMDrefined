@@ -44,16 +44,14 @@ class ForestTMDrefind:
 
         # parameter distribution
         if param_grid is None:
-            param_grid = {'n_estimators': np.linspace(300, 700, 5, dtype=int),
-                          'max_depth': np.linspace(10, 40, 7, dtype=int),
-                          'max_leaf_nodes': np.linspace(20, 80, 9, dtype=int),
-                          'max_samples': [0.6, 0.8, 1.0],
-                          'verbose': [0],
-                          'ccp_alpha': [0, 0.005, 0.01, 0.015, 0.02],
+            param_grid = {'n_estimators': np.linspace(500, 900, 20, dtype=int),
+                          'max_depth': np.linspace(10, 100, 20, dtype=int),
+                          'max_leaf_nodes': np.linspace(30, 300, 30, dtype=int),
+                          'max_samples': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0],
                           'class_weight': ["balanced_subsample"],
                           'bootstrap': [True],
                           'n_jobs': [n_jobs],
-                          'criterion': ["gini"]
+                          'criterion': ["entropy"]
                           }
 
         search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto", cv=5,
@@ -142,7 +140,7 @@ class ForestTMDrefind:
         data = feature_importance.tolist()
         scale_labels = feature_importance.index.tolist()   # scale_labels are the scale_id in scale_cat
         # generate mapping colors on bars for each scale
-
+        print(scale_labels)
         list_aao_color_for_bar = []
         for labels in scale_labels:
             color_tag = scale_cat_df.loc[labels, "category"]
