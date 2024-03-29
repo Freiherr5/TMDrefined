@@ -60,10 +60,11 @@ class ForestTMDrefind:
                                          scoring='neg_mean_absolute_error').fit(df_train_instance_parameters.
                                                                                 to_numpy().tolist(), df_train_labels.
                                                                                 to_numpy().tolist()))
-        path, sep = find_folderpath()
+        path_file, path_module, sep = find_folderpath()
         date_today = date.today()
-        path_forest = f"output_forest_model_[{job_name}]_{date_today}"
-        make_directory(path_forest)
+        path_forest = f"{path_file}{sep}output_forest_model_[{job_name}]_{date_today}"
+        name_forest = f"output_forest_model_[{job_name}]_{date_today}"
+        make_directory(name_forest)
 
         # output of search:
         best_params = search_cv.best_params_
@@ -101,7 +102,7 @@ class ForestTMDrefind:
 
         graph = graphviz.Source(dot_data)
         graph.format = "png"
-        path, sep = find_folderpath()
+        path_file, path_module, sep = find_folderpath()
         date_today = date.today()
         graph.render(f"{self.path_forest}{sep}{self.job_name}_sample_tree_dot_{date_today}", view=True)
 
@@ -113,7 +114,7 @@ class ForestTMDrefind:
         cv_results["std_test_error"] = cv_results["std_test_score"]
         cv_results_final = cv_results[columns].sort_values(by="mean_test_error")
         if save_table:
-            path, sep = find_folderpath()
+            path_file, path_module, sep = find_folderpath()
             date_today = date.today()
             cv_results_final.to_excel(f"{self.path_forest}{sep}{self.job_name}_hyperparameter_{date_today}.xlsx")
         return cv_results_final
@@ -131,8 +132,8 @@ class ForestTMDrefind:
                                  'Conformation': "#3d9f47",
                                  'Energy': "#d54141"
                                  }
-        path, sep = find_folderpath()
-        path_to_scales_df = f"{path.split("scripts")[0]}{sep}_scales{sep}scales_cat.xlsx"
+        path_file, path_module, sep = find_folderpath()
+        path_to_scales_df = f"{path_module.split("scripts")[0]}{sep}_scales{sep}scales_cat.xlsx"
         # scale_cat allows for mapping of categories
         scale_cat_df = pd.read_excel(path_to_scales_df).set_index("scale_id")
 
@@ -149,7 +150,7 @@ class ForestTMDrefind:
             list_aao_color_for_bar.append(get_aao_color)
 
         # Plot a simple bar chart
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(len(scale_labels)/1.8, 5))
         ax.bar(scale_labels, data, color=list_aao_color_for_bar)
         ax.set_xticklabels(scale_labels, rotation=45, ha="right", fontweight="bold")
         ax.set_title("Feature Importance", fontsize=20, fontweight="bold")
@@ -159,7 +160,7 @@ class ForestTMDrefind:
         handles = [plt.Rectangle((0, 0), 1, 1, color=aaontology_colors_hex[label]) for label in labels_legend]
         ax.legend(handles, labels_legend)
         # saving
-        path, sep = find_folderpath()
+        path_file, path_module, sep = find_folderpath()
         date_today = date.today()
         plt.savefig(f"{self.path_forest}{sep}{self.job_name}_feature_importance_{date_today}.png", dpi=400,
                     bbox_inches="tight")
@@ -184,7 +185,7 @@ class ForestTMDrefind:
         # Create the confusion matrix
         cm = confusion_matrix(label_test, label_pred)
         if cm_save:
-            path, sep = find_folderpath()
+            path_file, path_module, sep = find_folderpath()
             date_today = date.today()
             layout = type('IdentityClassifier', (), {"predict": lambda i: i, "_estimator_type": "classifier"})
             cm = ConfusionMatrixDisplay.from_estimator(layout, label_pred, label_test, normalize='true',
@@ -234,7 +235,7 @@ class ForestTMDrefind:
             i += 1
         pos_proba = pd.DataFrame(pos_proba_list).mean().to_numpy().tolist()  # take average of all preds per inersect
         max_index = pos_proba.index(max(pos_proba))
-        best_pos = pos_seq_list[pos_proba_pre.index(max(pos_proba_pre))]  # pos_seq_list same order as proba
+        best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba
 
         # visualize
         start = int(pos_intersect)
@@ -260,7 +261,7 @@ class ForestTMDrefind:
         ax2.set_xlabel('sequence', fontweight="bold")
         ax2.set_ylabel('probability', fontweight="bold")
         # saving
-        path, sep = find_folderpath()
+        path_file, path_module, sep = find_folderpath()
         date_today = date.today()
         plt.savefig(f"{self.path_forest}{sep}{self.job_name}_{entry_tag}_proba_intersect_{date_today}.png", dpi=400,
                     bbox_inches="tight")
@@ -270,9 +271,9 @@ class ForestTMDrefind:
 # debugging
 # ______________________________________________________________________________________________________________________
 if __name__ == "__main__":
-    path, sep = find_folderpath()
+    path_file, path_module, sep = find_folderpath()
     list_scale_names = ["BURA740101", "CHAM830104"]
-    label_df_test = (pd.read_excel(f"{path.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
+    label_df_test = (pd.read_excel(f"{path_module.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
                      .set_index("ID"))
 
     scale_df, id_tags_df = aa_numeric_by_scale(feature_df=label_df_test[["window_left", "window_right"]],

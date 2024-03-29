@@ -33,14 +33,14 @@ def find_folderpath():
     path : current directory path the .py file is located on the OS
     notation : either Linux "/" symbol or Windows "\" symbol for path string
     """
-
+    path_module = os.path.abspath(os.path.dirname(__file__))
     path_file = str(pathlib.Path().absolute())
     # generate OS seperater (sep)
     if platform.system() == 'Windows':
         sep = "\\"
     else:
         sep = "/"
-    return path_file, sep
+    return path_file, path_module, sep
 
 
 def make_directory(name_dir, path_dir=None):
@@ -56,7 +56,7 @@ def make_directory(name_dir, path_dir=None):
     if path_dir is None:
         path_dir = find_folderpath()[0]
 
-    sep = find_folderpath()[1]  # either seperator for Linux or Windows
+    sep = find_folderpath()[2]  # either seperator for Linux or Windows
 
     # check and create new target directory if input given
     path_name_dir = f"{path_dir}{sep}{name_dir}"

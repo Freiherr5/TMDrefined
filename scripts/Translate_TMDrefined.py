@@ -7,7 +7,7 @@ from pandas.api.types import is_string_dtype
 
 # localization of script
 # ______________________________________________________________________________________________________________________
-path, sep = find_folderpath()
+path_file, path_module, sep = find_folderpath()
 
 
 # creating the input for the model
@@ -45,7 +45,7 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: pd.DataFrame, scale_
         label_df = label_df.loc[shared_index]
 
     # normalized scales
-    path_to_scales_df = f"{path.split("scripts")[0]}{sep}_scales{sep}scales.xlsx"
+    path_to_scales_df = f"{path_module.split("scripts")[0]}{sep}_scales{sep}scales.xlsx"
     scale_df = pd.read_excel(path_to_scales_df).set_index("AA")
 
     # filter scale_df
@@ -142,7 +142,7 @@ def balanced_test_set_generator(label_df: pd.DataFrame, target_column: str, fold
 if __name__ == "__main__":
     # input
     list_scale_names = ["BURA740101", "CHAM830104"]
-    label_df_test = (pd.read_excel(f"{path.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
+    label_df_test = (pd.read_excel(f"{path_module.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
                      .set_index("ID"))
 
     scale_df, id_tags_df = aa_numeric_by_scale(feature_df=label_df_test[["window_left", "window_right"]],
