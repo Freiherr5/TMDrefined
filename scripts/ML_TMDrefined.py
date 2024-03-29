@@ -199,8 +199,18 @@ class ForestTMDrefind:
     def pred_from_seq(self, entry_tag, sequence, pos_intersect, rounds: int = None):
         df_sequence_windows = get_aa_window_labels(window_size=4, range_window=12, aa_seq=sequence, name_label="query",
                                                    tmd_jmd_intersect=pos_intersect, start_pos=self.start_tmd)
+        # shuffler method to align pos_proba-pre with sequence: 0, -1, 1, -2, 2....
+        pos_window = []
+        flag_set = True  # the switch
+        for window in df_sequence_windows.index.tolist():
+            if flag_set:
+                pos_window.append(window)
+                flag_set = False
+            else:
+                pos_window.insert(0, window)
+                flag_set = True
+        df_sequence_windows = df_sequence_windows.reindex(pos_window)
         df_sequence_windows_filter = df_sequence_windows.dropna().set_index("ID")
-
         feature_importance = pd.Series(self.model.feature_importances_,
                                        index=self.df_train_instance_parameters.columns).sort_values(ascending=False)
         scale_labels = feature_importance.index.tolist()  # scale_labels are the scale_id in scale_cat
@@ -215,25 +225,17 @@ class ForestTMDrefind:
         elif rounds < 1:
             rounds = 1
 
-        i = 0
+        i = 1
         pos_proba_list = []
         while i <= rounds:
             # prediction of sequence
-            pred_proba_window = self.model.predict_proba(scale_df.to_numpy().tolist()).tolist()
-            pos_proba_pre = [pred[1] for pred in pred_proba_window]
-            # shuffler method to align pos_proba-pre with sequence: 0, -1, 1, -2, 2....
-            pos_proba_iter = []
-            flag_set = True  # the switch
-            for proba in pos_proba_pre:
-                if flag_set:
-                    pos_proba_iter.append(proba)
-                    flag_set = False
-                else:
-                    pos_proba_iter.insert(0, proba)
-                    flag_set = True
-            pos_proba_list.append(pos_proba_iter)
+            preds_proba_window = self.model.predict_proba(scale_df.to_numpy().tolist()).tolist()
+            pos_proba_pre = [pred[1] for pred in preds_proba_window]
+            pos_proba_list.append(pos_proba_pre)
             i += 1
-        pos_proba = pd.DataFrame(pos_proba_list).mean().to_numpy().tolist()  # take average of all preds per inersect
+
+        pos_proba_df = pd.DataFrame(pos_proba_list)  # take average of all preds per inersect
+        pos_proba = pos_proba_df.mean().to_numpy().tolist()
         max_index = pos_proba.index(max(pos_proba))
         best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba
 
