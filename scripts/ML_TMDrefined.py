@@ -21,24 +21,31 @@ import matplotlib.pyplot as plt
 
 class ForestTMDrefind:
 
-    def __init__(self, df_train_instance_parameters, df_train_labels, best_params, param_dist, search_cv, model,
-                 job_name, path_forest, start_tmd):
+    def __init__(self, df_train_instance_parameters, df_train_labels, best_params, param_dist, search_cv, model_list,
+                 job_name, path_forest, start_tmd, scales_list, mode):
         self.df_train_instance_parameters = df_train_instance_parameters
         self.df_train_labels = df_train_labels
         self.best_params = best_params
         self.param_dist = param_dist
         self.search_cv = search_cv
-        self.model = model
+        self.model_list = model_list
         self.job_name = job_name
         self.path_forest = path_forest
         self.start_tmd = start_tmd
+        self.scales_list = scales_list
+        self.mode = mode
 
     # random forest algorithm --> search and train with best params
     # __________________________________________________________________________________________________________________
     @classmethod
     @timingmethod
-    def make_forest(cls, df_train_instance_parameters, df_train_labels, job_name, start_tmd=True,
-                    n_jobs=1, param_grid=None):
+    def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
+                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10):
+
+        train_scale_df, train_label_df = aa_numeric_by_scale(feature_df=df_train_windows,
+                                                             label_df=df_train_labels,
+                                                             scale_df_filter=scales_list, mode=mode)
+
         # initialize the RandomForestClassifier as clf
         clf = RandomForestClassifier()
 
@@ -53,12 +60,13 @@ class ForestTMDrefind:
                           'class_weight': ["balanced_subsample"],
                           'bootstrap': [True],
                           'n_jobs': [n_jobs],
-                          'criterion': ["gini"]
+                          'criterion': ["entropy"]
                           }
 
         search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto", cv=5,
-                                         scoring='neg_mean_absolute_error').fit(df_train_instance_parameters.
-                                                                                to_numpy().tolist(), df_train_labels.
+                                         scoring='neg_mean_absolute_error').fit(train_scale_df.
+                                                                                to_numpy().tolist(),
+                                                                                train_label_df.
                                                                                 to_numpy().tolist()))
         path_file, path_module, sep = find_folderpath()
         date_today = date.today()
@@ -77,23 +85,30 @@ class ForestTMDrefind:
             file.write(f"{best_params_txt}")
 
         # new model with best_params
-        clf_best = RandomForestClassifier(**best_params)
-        clf_best.fit(df_train_instance_parameters.to_numpy().tolist(), df_train_labels.to_numpy().tolist())
-
+        # generate list of trained random forests with the best parameters!
+        if not isinstance(model_retrains, int):
+            model_retrains = 10
+        i = 0
+        clf_model_list = []
+        while i < model_retrains:
+            clf_best = RandomForestClassifier(**best_params)
+            clf_best = clf_best.fit(train_scale_df.to_numpy().tolist(), train_label_df.to_numpy().tolist())
+            clf_model_list.append(clf_best)
+            i+=1
         # print best parameters
         print(f"given parameters: {param_grid} with HalvingGridSearchCV gave following best-performing parameter combi:"
               f"best params: {best_params}")
 
-        return cls(df_train_instance_parameters, df_train_labels, best_params, param_grid, search_cv, clf_best,
-                   job_name, path_forest, start_tmd)
+        return cls(df_train_windows, df_train_labels, best_params, param_grid, search_cv, clf_model_list,
+                   job_name, path_forest, start_tmd, scales_list, mode)
 
     # analysis functions
     # __________________________________________________________________________________________________________________
     def fetch_a_tree(self):
         tree_number = np.random.randint(self.best_params["n_estimators"], size=1)[0]
-        tree = self.model.estimators_[tree_number]
+        tree = self.model_list[0].estimators_[tree_number]
         dot_data = export_graphviz(tree,
-                                   feature_names=self.df_train_instance_parameters.columns,
+                                   feature_names=self.scales_list,
                                    out_file=None,
                                    impurity=True,
                                    proportion=True,
@@ -134,11 +149,11 @@ class ForestTMDrefind:
                                  }
         path_file, path_module, sep = find_folderpath()
         path_to_scales_df = f"{path_module.split("scripts")[0]}{sep}_scales{sep}scales_cat.xlsx"
+
         # scale_cat allows for mapping of categories
         scale_cat_df = pd.read_excel(path_to_scales_df).set_index("scale_id")
-
-        feature_importance = pd.Series(self.model.feature_importances_,
-                                       index=self.df_train_instance_parameters.columns).sort_values(ascending=False)
+        feature_importance = pd.Series(self.model_list[0].feature_importances_,
+                                       index=self.scales_list).sort_values(ascending=False)
         data = feature_importance.tolist()
         scale_labels = feature_importance.index.tolist()   # scale_labels are the scale_id in scale_cat
         # generate mapping colors on bars for each scale
@@ -150,7 +165,7 @@ class ForestTMDrefind:
             list_aao_color_for_bar.append(get_aao_color)
 
         # Plot a simple bar chart
-        fig, ax = plt.subplots(figsize=(len(scale_labels)/1.8, 5))
+        fig, ax = plt.subplots(figsize=((len(scale_labels)/1.8)+3, 5))
         ax.bar(scale_labels, data, color=list_aao_color_for_bar)
         ax.set_xticklabels(scale_labels, rotation=45, ha="right", fontweight="bold")
         ax.set_title("Feature Importance", fontsize=20, fontweight="bold")
@@ -165,9 +180,25 @@ class ForestTMDrefind:
         plt.savefig(f"{self.path_forest}{sep}{self.job_name}_feature_importance_{date_today}.png", dpi=400,
                     bbox_inches="tight")
 
-    def predict_labels(self, df_pred_instance_parameters):
-        pred_labels = self.model.predict(df_pred_instance_parameters.to_numpy().tolist())
-        return pred_labels
+    def predict_labels(self, df_pred_windows):
+        index_list = df_pred_windows.index.tolist()
+        train_scale_df = aa_numeric_by_scale(feature_df=df_pred_windows, scale_df_filter=self.scales_list,
+                                             mode=self.mode)[0]
+
+        list_proba = []
+        for models in self.model_list:                                                                                  # needsfixing since dataframe!
+            preds_proba_window = models.predict_proba(train_scale_df.to_numpy().tolist())
+            pos_proba_pre = [pred[1] for pred in preds_proba_window]
+            list_proba.append(pos_proba_pre)
+        proba_result = pd.DataFrame(list_proba).mean().to_numpy().tolist()
+        pred_labels = []
+
+        for proba in proba_result:
+            if proba >= 0.5:
+                pred_labels.append(1)
+            else:
+                pred_labels.append(0)
+        return pred_labels, proba_result, index_list
 
     def test_predict_quality(self, label_test, label_pred, cm_save=False):
 
@@ -196,7 +227,7 @@ class ForestTMDrefind:
 
     # predict based on sequences + initial predicted JMD|TMD intersection
     # __________________________________________________________________________________________________________________
-    def pred_from_seq(self, entry_tag, sequence, pos_intersect, rounds: int = None):
+    def pred_from_seq(self, entry_tag, sequence, pos_intersect):
         df_sequence_windows = get_aa_window_labels(window_size=4, range_window=12, aa_seq=sequence, name_label="query",
                                                    tmd_jmd_intersect=pos_intersect, start_pos=self.start_tmd)
         # shuffler method to align pos_proba-pre with sequence: 0, -1, 1, -2, 2....
@@ -211,33 +242,24 @@ class ForestTMDrefind:
                 flag_set = True
         df_sequence_windows = df_sequence_windows.reindex(pos_window)
         df_sequence_windows_filter = df_sequence_windows.dropna().set_index("ID")
-        feature_importance = pd.Series(self.model.feature_importances_,
-                                       index=self.df_train_instance_parameters.columns).sort_values(ascending=False)
-        scale_labels = feature_importance.index.tolist()  # scale_labels are the scale_id in scale_cat
 
         pos_seq_list = df_sequence_windows_filter["pos_in_seq"].to_numpy().tolist()
-        scale_df, not_used = aa_numeric_by_scale(feature_df=df_sequence_windows_filter[["window_left", "window_right"]],
-                                                 label_df=df_sequence_windows_filter["label"],
-                                                 scale_df_filter=scale_labels)
-        # make sure rounds is int
-        if not isinstance(rounds, int):
-            rounds = 1
-        elif rounds < 1:
-            rounds = 1
+        scale_df = aa_numeric_by_scale(feature_df=df_sequence_windows_filter[["window_left", "window_right"]],
+                                       label_df=df_sequence_windows_filter["label"],
+                                       scale_df_filter=self.scales_list, mode=self.mode)[0]
 
-        i = 1
+        # prediction of sequence
         pos_proba_list = []
-        while i <= rounds:
-            # prediction of sequence
-            preds_proba_window = self.model.predict_proba(scale_df.to_numpy().tolist()).tolist()
+        for models in self.model_list:
+            preds_proba_window = models.predict_proba(scale_df.to_numpy().tolist()).tolist()
             pos_proba_pre = [pred[1] for pred in preds_proba_window]
             pos_proba_list.append(pos_proba_pre)
-            i += 1
+
 
         pos_proba_df = pd.DataFrame(pos_proba_list)  # take average of all preds per inersect
-        pos_proba = pos_proba_df.mean().to_numpy().tolist()
-        max_index = pos_proba.index(max(pos_proba))
-        best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba
+        pos_proba = pos_proba_df.mean().to_numpy().tolist()  # the mean
+        max_index = pos_proba.index(max(pos_proba))  # max
+        best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba, find index
 
         # visualize
         start = int(pos_intersect)
@@ -269,25 +291,3 @@ class ForestTMDrefind:
                     bbox_inches="tight")
         return [entry_tag, best_pos]
 
-
-# debugging
-# ______________________________________________________________________________________________________________________
-if __name__ == "__main__":
-    path_file, path_module, sep = find_folderpath()
-    list_scale_names = ["BURA740101", "CHAM830104"]
-    label_df_test = (pd.read_excel(f"{path_module.split("scripts")[0]}example{sep}am_label_single_stop_pos_TMD_thresh=3.xlsx")
-                     .set_index("ID"))
-
-    scale_df, id_tags_df = aa_numeric_by_scale(feature_df=label_df_test[["window_left", "window_right"]],
-                                               label_df=label_df_test["label"], scale_df_filter=list_scale_names)
-
-    param_dist_testi = {'n_estimators': np.linspace(100, 500, 3, dtype=int),
-                        "max_depth": [3, None],
-                        "min_samples_split": [5, 10],
-                        "n_jobs": [4],
-                        'criterion': ["gini"]
-                        }
-    example_forest = ForestTMDrefind.make_forest(scale_df, id_tags_df, param_grid=param_dist_testi, job_name="test")
-    example_forest.fetch_a_tree()
-    print(example_forest.hyperparameter_summary())
-    example_forest.feature_importance()

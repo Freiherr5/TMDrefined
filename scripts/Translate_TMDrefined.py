@@ -14,8 +14,8 @@ path_file, path_module, sep = find_folderpath()
 # ______________________________________________________________________________________________________________________
 
 @timingmethod
-def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: pd.DataFrame, scale_df_filter: list = None,
-                        mode: str = "weighted"):
+def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Series) = None,
+                        scale_df_filter: list = None, mode: str = "weighted"):
     # check function block
     # ______________________________________________________________________________
 
@@ -36,13 +36,14 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: pd.DataFrame, scale_
 
     # check intersect between label and feature df
     check_index_feature = feature_df.index.tolist()
-    check_index_label = label_df.index.tolist()
-    shared_index = [value for value in check_index_feature if value in check_index_label]
-    if len(shared_index) == 0:
-        raise ValueError("Make sure feature_df and label_df have the same index, no shared indices!")
-    else:
-        feature_df = feature_df.loc[shared_index]
-        label_df = label_df.loc[shared_index]
+    if isinstance(label_df, (pd.DataFrame, pd.Series)):
+        check_index_label = label_df.index.tolist()
+        shared_index = [value for value in check_index_feature if value in check_index_label]
+        if len(shared_index) == 0:
+            raise ValueError("Make sure feature_df and label_df have the same index, no shared indices!")
+        else:
+            feature_df = feature_df.loc[shared_index]
+            label_df = label_df.loc[shared_index]
 
     # normalized scales
     path_to_scales_df = f"{path_module.split("scripts")[0]}{sep}_scales{sep}scales.xlsx"
