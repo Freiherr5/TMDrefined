@@ -228,7 +228,7 @@ class ForestTMDrefind:
     def pred_from_seq(self, entry_tag, sequence, pos_intersect):
         df_sequence_windows = get_aa_window_labels(window_size=4, range_window=12, aa_seq=sequence, name_label="query",
                                                    tmd_jmd_intersect=pos_intersect, start_pos=self.start_tmd)
-        # shuffler method to align pos_proba-pre with sequence: 0, -1, 1, -2, 2....
+
         pos_window = []
         flag_set = True  # the switch
         for window in df_sequence_windows.index.tolist():
@@ -239,8 +239,7 @@ class ForestTMDrefind:
                 pos_window.insert(0, window)
                 flag_set = True
         df_sequence_windows = df_sequence_windows.reindex(pos_window)
-        df_sequence_windows_filter = df_sequence_windows.dropna().set_index("ID")
-
+        df_sequence_windows_filter = df_sequence_windows.replace('', np.nan).dropna().set_index("ID")
         pos_seq_list = df_sequence_windows_filter["pos_in_seq"].to_numpy().tolist()
         scale_df = aa_numeric_by_scale(feature_df=df_sequence_windows_filter[["window_left", "window_right"]],
                                        label_df=df_sequence_windows_filter["label"],
@@ -253,7 +252,6 @@ class ForestTMDrefind:
             pos_proba_pre = [pred[1] for pred in preds_proba_window]
             pos_proba_list.append(pos_proba_pre)
 
-
         pos_proba_df = pd.DataFrame(pos_proba_list)  # take average of all preds per inersect
         pos_proba = pos_proba_df.mean().to_numpy().tolist()  # the mean
         max_index = pos_proba.index(max(pos_proba))  # max
@@ -263,16 +261,26 @@ class ForestTMDrefind:
         start = int(pos_intersect)
         if self.start_tmd:
             start = int(pos_intersect-1)
-        seq_slice_list = list(sequence[start-11: start+12])
+        seq_slice_list = list(sequence[start - 11: start + 12])
+        len_seq = len(seq_slice_list)
+
+        if start < 11:
+            seq_slice_list = list(sequence[1: start + 12])
+            len_seq = len(seq_slice_list)
+        elif start+12 > len(sequence)-1:
+            seq_slice_list = list(sequence[start - 11: len(sequence)])
+            len_seq = len(seq_slice_list)
+
+
         fig2, ax2 = plt.subplots()
-        array24 = np.linspace(1,23,23, dtype=int)
+        array24 = np.linspace(1, len_seq, len_seq, dtype=int)
         # make color map because....
         color_tmd = "#d9bd82"  # yellow
         color_jmd = "#99c0de"  # blue
         if not self.start_tmd:
             color_tmd, color_jmd = color_jmd, color_tmd
         color_list_left = [color_jmd]*max_index
-        color_list_right = [color_tmd]*(24-max_index)
+        color_list_right = [color_tmd]*(len_seq-max_index)
         color_list_left.extend(color_list_right)
         # make plot
         ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
