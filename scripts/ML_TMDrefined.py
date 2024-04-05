@@ -268,7 +268,7 @@ class ForestTMDrefind:
         # special dataframe with psoition mapped to probabilty of intersection in case it does not meet length criterium
         df_preds_proba = pd.DataFrame([pos_seq_list, pos_proba]).T
         df_preds_proba = df_preds_proba.rename(columns={0: "pos", 1: "proba"}).sort_values("proba", ascending=False)
-        print(df_preds_proba)
+
         # visualize
         if show_plot:
             start = int(pos_intersect)
