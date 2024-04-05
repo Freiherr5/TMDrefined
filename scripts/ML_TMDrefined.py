@@ -225,7 +225,7 @@ class ForestTMDrefind:
 
     # predict based on sequences + initial predicted JMD|TMD intersection
     # __________________________________________________________________________________________________________________
-    def pred_from_seq(self, entry_tag, sequence, pos_intersect):
+    def pred_from_seq(self, entry_tag, sequence, pos_intersect, show_plot=True):
         df_sequence_windows = get_aa_window_labels(window_size=4, range_window=12, aa_seq=sequence, name_label="query",
                                                    tmd_jmd_intersect=pos_intersect, start_pos=self.start_tmd)
 
@@ -258,42 +258,43 @@ class ForestTMDrefind:
         best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba, find index
 
         # visualize
-        start = int(pos_intersect)
-        if self.start_tmd:
-            start = int(pos_intersect-1)
-        seq_slice_list = list(sequence[start - 11: start + 12])
-        len_seq = len(seq_slice_list)
-
-        if start < 11:
-            seq_slice_list = list(sequence[1: start + 12])
-            len_seq = len(seq_slice_list)
-        elif start+12 > len(sequence)-1:
-            seq_slice_list = list(sequence[start - 11: len(sequence)])
+        if show_plot:
+            start = int(pos_intersect)
+            if self.start_tmd:
+                start = int(pos_intersect-1)
+            seq_slice_list = list(sequence[start - 11: start + 12])
             len_seq = len(seq_slice_list)
 
+            if start < 11:
+                seq_slice_list = list(sequence[1: start + 12])
+                len_seq = len(seq_slice_list)
+            elif start+12 > len(sequence)-1:
+                seq_slice_list = list(sequence[start - 11: len(sequence)])
+                len_seq = len(seq_slice_list)
 
-        fig2, ax2 = plt.subplots()
-        array24 = np.linspace(1, len_seq, len_seq, dtype=int)
-        # make color map because....
-        color_tmd = "#d9bd82"  # yellow
-        color_jmd = "#99c0de"  # blue
-        if not self.start_tmd:
-            color_tmd, color_jmd = color_jmd, color_tmd
-        color_list_left = [color_jmd]*max_index
-        color_list_right = [color_tmd]*(len_seq-max_index)
-        color_list_left.extend(color_list_right)
-        # make plot
-        ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
-        ax2.set_xticks(array24)
-        ax2.set_xticklabels(seq_slice_list, rotation=0, ha="center", fontweight="bold")
-        ax2.set_title(f"{entry_tag} TMD|JMD intersection probability", fontsize=20, fontweight="bold")
-        ax2.spines[['right', 'top']].set_visible(False)
-        ax2.set_xlabel('sequence', fontweight="bold")
-        ax2.set_ylabel('probability', fontweight="bold")
-        # saving
-        path_file, path_module, sep = find_folderpath()
-        date_today = date.today()
-        plt.savefig(f"{self.path_forest}{sep}{self.job_name}_{entry_tag}_proba_intersect_{date_today}.png", dpi=400,
-                    bbox_inches="tight")
+
+            fig2, ax2 = plt.subplots()
+            array24 = np.linspace(1, len_seq, len_seq, dtype=int)
+            # make color map because....
+            color_tmd = "#d9bd82"  # yellow
+            color_jmd = "#99c0de"  # blue
+            if not self.start_tmd:
+                color_tmd, color_jmd = color_jmd, color_tmd
+            color_list_left = [color_jmd]*max_index
+            color_list_right = [color_tmd]*(len_seq-max_index)
+            color_list_left.extend(color_list_right)
+            # make plot
+            ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
+            ax2.set_xticks(array24)
+            ax2.set_xticklabels(seq_slice_list, rotation=0, ha="center", fontweight="bold")
+            ax2.set_title(f"{entry_tag} TMD|JMD intersection probability", fontsize=20, fontweight="bold")
+            ax2.spines[['right', 'top']].set_visible(False)
+            ax2.set_xlabel('sequence', fontweight="bold")
+            ax2.set_ylabel('probability', fontweight="bold")
+            # saving
+            path_file, path_module, sep = find_folderpath()
+            date_today = date.today()
+            plt.savefig(f"{self.path_forest}{sep}{self.job_name}_{entry_tag}_proba_intersect_{date_today}.png", dpi=400,
+                        bbox_inches="tight")
         return [entry_tag, best_pos]
 
