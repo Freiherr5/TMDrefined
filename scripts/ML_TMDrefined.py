@@ -206,6 +206,15 @@ class ForestTMDrefind:
         recall = recall_score(label_test, label_pred)
         f1 = f1_score(label_test, label_pred)
 
+        sep = find_folderpath()[2]
+        with open(f"{self.path_forest}{sep}{self.job_name}_metrics.txt", "w") as file:
+            file.write(f"""
+                        Accuracy: {accuracy} \n
+                        Precision: {precision} \n
+                        Recall: {recall} \n
+                        F1: {f1} \n
+                        """)
+
         print("Accuracy:", accuracy)
         print("Precision:", precision)
         print("Recall:", recall)
@@ -256,7 +265,10 @@ class ForestTMDrefind:
         pos_proba = pos_proba_df.mean().to_numpy().tolist()  # the mean
         max_index = pos_proba.index(max(pos_proba))  # max
         best_pos = pos_seq_list[pos_proba.index(max(pos_proba))]  # pos_seq_list same order as proba, find index
-
+        # special dataframe with psoition mapped to probabilty of intersection in case it does not meet length criterium
+        df_preds_proba = pd.DataFrame([pos_seq_list, pos_proba]).T
+        df_preds_proba = df_preds_proba.rename(columns={0: "pos", 1: "proba"}).sort_values("proba", ascending=False)
+        print(df_preds_proba)
         # visualize
         if show_plot:
             start = int(pos_intersect)
@@ -296,5 +308,5 @@ class ForestTMDrefind:
             date_today = date.today()
             plt.savefig(f"{self.path_forest}{sep}{self.job_name}_{entry_tag}_proba_intersect_{date_today}.png", dpi=400,
                         bbox_inches="tight")
-        return [entry_tag, best_pos]
+        return [entry_tag, best_pos, df_preds_proba]
 
