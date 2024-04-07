@@ -93,7 +93,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     columns_tmd_refined = ["index", "len_tmd", start_pos_col, stop_pos_col, "jmd_n", "tmd", "jmd_c", seq_col]
     for index, rows in df_filter.iterrows():
         set_keep = True
-        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=False)
+        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=False)  # default is False
         pred_c = c_forest.pred_from_seq(index, rows[2], int(rows[1]), show_plot=False)
         start_pos = pred_n[1]
         stop_pos = pred_c[1]
@@ -120,11 +120,11 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
             if pos_df_proba_len_tmd == len(df_proba_len_tmd):
                 set_keep = False
 
-        jmd_n = rows[2][start_pos-10: start_pos-1]
-        if start_pos - 10 < 0:
+        jmd_n = rows[2][start_pos-11: start_pos-1]
+        if start_pos - 11 < 0:
             jmd_n = rows[2][0: start_pos - 1]
         tmd = rows[2][start_pos-1: stop_pos]
-        jmd_c = rows[2][stop_pos: stop_pos+9]
+        jmd_c = rows[2][stop_pos: stop_pos+10]
         if set_keep:
             list_tmd_refined.append([index, len_tmd, start_pos, stop_pos, jmd_n, tmd, jmd_c, rows[2]])
     df_tmd_refined = pd.DataFrame(list_tmd_refined, columns=columns_tmd_refined).set_index("index")
@@ -137,4 +137,4 @@ if __name__ == "__main__":
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="tmd_refined_N_out_length_limit")
+        job_name="NEW_tmd_refined_N_out_length_limit")
