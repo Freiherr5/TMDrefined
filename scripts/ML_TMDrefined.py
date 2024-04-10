@@ -6,7 +6,7 @@ from .StandardConfig import find_folderpath
 from .StandardConfig import make_directory
 # ML
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (accuracy_score, confusion_matrix, precision_score, recall_score, f1_score,
+from sklearn.metrics import (balanced_accuracy_score, confusion_matrix, precision_score, recall_score, f1_score,
                              ConfusionMatrixDisplay)
 from sklearn.experimental import enable_halving_search_cv
 from sklearn.model_selection import HalvingGridSearchCV
@@ -40,11 +40,14 @@ class ForestTMDrefind:
     @classmethod
     @timingmethod
     def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
-                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10):
+                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None):
 
-        train_scale_df, train_label_df = aa_numeric_by_scale(feature_df=df_train_windows,
-                                                             label_df=df_train_labels,
-                                                             scale_df_filter=scales_list, mode=mode)
+        if isinstance(train_data, list):
+            train_scale_df, train_label_df = train_data[0], train_data[1]
+        else:
+            train_scale_df, train_label_df = aa_numeric_by_scale(feature_df=df_train_windows,
+                                                                 label_df=df_train_labels,
+                                                                 scale_df_filter=scales_list, mode=mode)
 
         # initialize the RandomForestClassifier as clf
         clf = RandomForestClassifier()
@@ -201,10 +204,10 @@ class ForestTMDrefind:
     def test_predict_quality(self, label_test, label_pred, cm_save=False):
 
         # general info about performance
-        accuracy = accuracy_score(label_test, label_pred)
-        precision = precision_score(label_test, label_pred)
-        recall = recall_score(label_test, label_pred)
-        f1 = f1_score(label_test, label_pred)
+        accuracy = balanced_accuracy_score(label_test, label_pred)
+        precision = precision_score(label_test, label_pred, average="weighted")
+        recall = recall_score(label_test, label_pred, average="weighted")
+        f1 = f1_score(label_test, label_pred, average="weighted")
 
         sep = find_folderpath()[2]
         with open(f"{self.path_forest}{sep}{self.job_name}_metrics.txt", "w") as file:
@@ -275,32 +278,37 @@ class ForestTMDrefind:
             if self.start_tmd:
                 start = int(pos_intersect-1)
             seq_slice_list = list(sequence[start - 11: start + 12])
-            seq_slice_list_tick = list(sequence[start - 11: start + 13])
+            seq_slice_list_tick = list(sequence[start - 12: start + 12])
             len_seq = len(seq_slice_list)
 
             if start < 11:
                 seq_slice_list = list(sequence[1: start + 12])
-                seq_slice_list_tick = list(sequence[1: start + 13])
+                seq_slice_list_tick = list(sequence[0: start + 12])
                 len_seq = len(seq_slice_list)
+
             elif start+12 > len(sequence)-1:
                 seq_slice_list = list(sequence[start - 11: len(sequence)])
                 seq_slice_list_tick = list(sequence[start - 11: len(sequence)])
                 len_seq = len(seq_slice_list)
 
-
             fig2, ax2 = plt.subplots()
-            array_graph_points = np.linspace(1.5, len_seq+0.5, len_seq, dtype=int)
-            array_ticks = np.linspace(1, len_seq+1, len_seq+1, dtype=int)
+            array_graph_points = np.linspace(1.5, len_seq+0.5, len_seq, dtype=float)
+            if start + 12 > len(sequence) - 1:
+                array_ticks = np.linspace(1, len_seq, len_seq, dtype=int)
+            else:
+                array_ticks = np.linspace(1, len_seq+1, len_seq+1, dtype=int)
             # make color map because....
             color_tmd = "#d9bd82"  # yellow
             color_jmd = "#99c0de"  # blue
             if not self.start_tmd:
                 color_tmd, color_jmd = color_jmd, color_tmd
             # plot the graph
-            ax2.fill_between(x=array_graph_points, y1=pos_proba, color=color_tmd)
-            ax2.fill_between(x=array_graph_points[max_index:], y1=pos_proba[max_index:], color=color_jmd)
+            ax2.fill_between(x=array_graph_points, y1=pos_proba, color=color_jmd)
+            ax2.fill_between(x=array_graph_points[max_index:], y1=pos_proba[max_index:], color=color_tmd)
             ax2.set_xticks(array_ticks)
             ax2.set_xticklabels(seq_slice_list_tick, rotation=0, ha="center", fontweight="bold")
+            ax2.axvline(x=array_graph_points[max_index], color="white", linestyle="--")
+
             if self.start_tmd:
                 ax2.set_title(f"{entry_tag} JMD-N | TMD border probability", fontsize=20, fontweight="bold")
                 ax2.spines[['right', 'top']].set_visible(False)
@@ -312,10 +320,12 @@ class ForestTMDrefind:
                 ax2.set_title(f"{entry_tag} TMD | JMD-C border probability", fontsize=20, fontweight="bold")
                 ax2.spines[['left', 'top']].set_visible(False)
                 ax2.text(2, max(pos_proba), "TMD", ha="left", va="bottom", fontweight="bold", fontsize=13,
-                         color=color_tmd)
+                         color=color_jmd)
                 ax2.text(len(seq_slice_list_tick ) - 1, max(pos_proba), "JMD-C", ha="right", va="bottom",
-                         fontweight="bold", fontsize=13, color=color_jmd)
+                         fontweight="bold", fontsize=13, color=color_tmd)
                 ax2.yaxis.tick_right()
+                ax2.yaxis.set_label_position("right")
+
             ax2.set_xlabel('sequence', fontweight="bold")
             ax2.set_ylabel('probability', fontweight="bold")
             # saving

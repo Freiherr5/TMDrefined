@@ -4,6 +4,7 @@ import pandas as pd
 # ml imports
 import scripts.ML_TMDrefined as ml_ref
 import scripts.StandardConfig as stdc
+from scripts.Translate_TMDrefined import aa_numeric_by_scale
 
 
 def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  job_name: str):
@@ -93,8 +94,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     columns_tmd_refined = ["index", "len_tmd", start_pos_col, stop_pos_col, "jmd_n", "tmd", "jmd_c", seq_col]
     for index, rows in df_filter.iterrows():
         set_keep = True
-        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=False)  # default is False
-        pred_c = c_forest.pred_from_seq(index, rows[2], int(rows[1]), show_plot=False)
+        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=True)  # default is False
+        pred_c = c_forest.pred_from_seq(index, rows[2], int(rows[1]), show_plot=True)
         start_pos = pred_n[1]
         stop_pos = pred_c[1]
         len_tmd = stop_pos-start_pos
@@ -132,9 +133,10 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
 
 if __name__ == "__main__":
-    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx").set_index("entry")
+    # "/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx"
+    df_input = pd.read_excel("/home/freiherr/Downloads/Breimann et al_Supplementary Tables/Breimann et al_Supplementary Tables/Supplementary Table 2_Datasets.xlsx", "SUBSTRATES").set_index("name")
     run(df=df_input,
-        start_pos_col="start_pos_TMD",
-        stop_pos_col="stop_pos_TMD",
+        start_pos_col="tmd_start",
+        stop_pos_col="tmd_stop",
         seq_col="sequence",
-        job_name="NEW_tmd_refined_N_out_length_limit")
+        job_name="y-Sec_SUB")
