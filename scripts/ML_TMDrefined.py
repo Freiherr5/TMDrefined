@@ -275,32 +275,47 @@ class ForestTMDrefind:
             if self.start_tmd:
                 start = int(pos_intersect-1)
             seq_slice_list = list(sequence[start - 11: start + 12])
+            seq_slice_list_tick = list(sequence[start - 11: start + 13])
             len_seq = len(seq_slice_list)
 
             if start < 11:
                 seq_slice_list = list(sequence[1: start + 12])
+                seq_slice_list_tick = list(sequence[1: start + 13])
                 len_seq = len(seq_slice_list)
             elif start+12 > len(sequence)-1:
                 seq_slice_list = list(sequence[start - 11: len(sequence)])
+                seq_slice_list_tick = list(sequence[start - 11: len(sequence)])
                 len_seq = len(seq_slice_list)
 
 
             fig2, ax2 = plt.subplots()
-            array24 = np.linspace(1, len_seq, len_seq, dtype=int)
+            array_graph_points = np.linspace(1.5, len_seq+0.5, len_seq, dtype=int)
+            array_ticks = np.linspace(1, len_seq+1, len_seq+1, dtype=int)
             # make color map because....
             color_tmd = "#d9bd82"  # yellow
             color_jmd = "#99c0de"  # blue
             if not self.start_tmd:
                 color_tmd, color_jmd = color_jmd, color_tmd
-            color_list_left = [color_jmd]*max_index
-            color_list_right = [color_tmd]*(len_seq-max_index)
-            color_list_left.extend(color_list_right)
-            # make plot
-            ax2.bar(array24, pos_proba, width=0.7, color=color_list_left)
-            ax2.set_xticks(array24)
-            ax2.set_xticklabels(seq_slice_list, rotation=0, ha="center", fontweight="bold")
-            ax2.set_title(f"{entry_tag} TMD|JMD intersection probability", fontsize=20, fontweight="bold")
-            ax2.spines[['right', 'top']].set_visible(False)
+            # plot the graph
+            ax2.fill_between(x=array_graph_points, y1=pos_proba, color=color_tmd)
+            ax2.fill_between(x=array_graph_points[max_index:], y1=pos_proba[max_index:], color=color_jmd)
+            ax2.set_xticks(array_ticks)
+            ax2.set_xticklabels(seq_slice_list_tick, rotation=0, ha="center", fontweight="bold")
+            if self.start_tmd:
+                ax2.set_title(f"{entry_tag} JMD-N | TMD border probability", fontsize=20, fontweight="bold")
+                ax2.spines[['right', 'top']].set_visible(False)
+                ax2.text(2, max(pos_proba), "JMD-N", ha="left", va="bottom", fontweight="bold", fontsize=13,
+                         color=color_jmd)
+                ax2.text(len(seq_slice_list_tick ) - 1, max(pos_proba), "TMD", ha="right", va="bottom",
+                         fontweight="bold", fontsize=13, color=color_tmd)
+            else:
+                ax2.set_title(f"{entry_tag} TMD | JMD-C border probability", fontsize=20, fontweight="bold")
+                ax2.spines[['left', 'top']].set_visible(False)
+                ax2.text(2, max(pos_proba), "TMD", ha="left", va="bottom", fontweight="bold", fontsize=13,
+                         color=color_tmd)
+                ax2.text(len(seq_slice_list_tick ) - 1, max(pos_proba), "JMD-C", ha="right", va="bottom",
+                         fontweight="bold", fontsize=13, color=color_jmd)
+                ax2.yaxis.tick_right()
             ax2.set_xlabel('sequence', fontweight="bold")
             ax2.set_ylabel('probability', fontweight="bold")
             # saving
