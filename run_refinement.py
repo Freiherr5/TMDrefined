@@ -7,7 +7,8 @@ import scripts.StandardConfig as stdc
 from scripts.Translate_TMDrefined import aa_numeric_by_scale
 
 
-def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  job_name: str):
+def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  job_name: str,
+        lower_len_tmd_border: int = 18, upper_len_tmd_border: int = 30):
     # check input
     # __________________________________________________________________________________________________________________
     if not isinstance(df, pd.DataFrame):
@@ -94,13 +95,13 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     columns_tmd_refined = ["index", "len_tmd", start_pos_col, stop_pos_col, "jmd_n", "tmd", "jmd_c", seq_col]
     for index, rows in df_filter.iterrows():
         set_keep = True
-        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=True)  # default is False
-        pred_c = c_forest.pred_from_seq(index, rows[2], int(rows[1]), show_plot=True)
+        pred_n = n_forest.pred_from_seq(index, rows[2], int(rows[0]), show_plot=False)  # default is False
+        pred_c = c_forest.pred_from_seq(index, rows[2], int(rows[1]), show_plot=False)
         start_pos = pred_n[1]
         stop_pos = pred_c[1]
         len_tmd = stop_pos-start_pos
         # check length criterium of the TMD
-        if (len_tmd < 15) or (len_tmd > 35):
+        if (len_tmd < lower_len_tmd_border) or (len_tmd > upper_len_tmd_border):
             list_all_proba_combos = []
             for index_n, rows_n in pred_n[2].iterrows():
                 for index_c, rows_c in pred_c[2].iterrows():
@@ -111,8 +112,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                                 sort_values("sum_proba", ascending=False))
             pos_df_proba_len_tmd = 0
             while pos_df_proba_len_tmd < len(df_proba_len_tmd):
-                if df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 0] >= 15:
-                    if df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 0] <= 35:
+                if df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 0] >= lower_len_tmd_border:
+                    if df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 0] <= upper_len_tmd_border:
                         start_pos = int(df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 2])
                         stop_pos = int(df_proba_len_tmd.iloc[pos_df_proba_len_tmd, 3])
                         len_tmd = stop_pos-start_pos

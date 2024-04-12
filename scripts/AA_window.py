@@ -212,7 +212,7 @@ class AAwindowrizer:
 
     @classmethod
     def modify_label_by_ident_column(cls, df_label: pd.DataFrame, df_compare: pd.DataFrame, column_id: str,
-                                     threshold: int = 2):
+                                     threshold: int = 2, weighting: bool = True):
         """
         Algorithm for changing labels, only for prior multi-annotation of protein sequences!
         Identification of matches based on given "column_aa_position" of "df_label", which must be contained in "df_compare"
@@ -224,6 +224,7 @@ class AAwindowrizer:
         df_compare : pd.DataFrame that contains the name_label (compare get_aa_window_labels) of df_label in a column
         column_id : the "ID" index of df_label must be identical to the column of df_compare, required for filtering!
         threshold : required matches in df_compare slices (sliced by column_id entries), standard is 2
+        weighting : creates a weight column depending on occurrence of window in data
 
         Returns
         _______
@@ -236,6 +237,10 @@ class AAwindowrizer:
         list_id = df_label_reset["ID"].to_numpy().tolist()
         df_compare_filtered = df_compare.dropna(subset=[column_id])
         position_seq_label = df_label.columns.tolist()[3]
+
+        # threshold dependent, meaning that negative labels at thresh=3 need to be inverse
+        if weighting:
+            df_label["weights"] = np.ones(df_label.shape[0], dtype=int).tolist()
 
         for query in df_label_search_list:
             # slice df_label
@@ -258,6 +263,8 @@ class AAwindowrizer:
                     if value in list_available_pos:  # is the seq pos in the label list?
                         id_df_label = list_id[index_df_label_list[list_available_pos.index(int(value))]]
                         df_label.loc[id_df_label, "label"] = 1
+                        if weighting:
+                            df_label.loc[id_df_label, "weights"] = count
 
         # remove all entries that are fully 0
         df_label_search_list = list(dict.fromkeys([str(index).split("__")[0] for index in df_label.index.tolist()]))

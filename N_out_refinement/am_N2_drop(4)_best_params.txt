@@ -1,6 +1,0 @@
-{'bootstrap': [True], 'ccp_alpha': [0], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [26], 'max_leaf_nodes': [200], 'max_samples': [0.3], 'n_estimators': [730], 'n_jobs': [-1], 'verbose': [0]}
-
-Accuracy: 0.8333333333333334
-Precision: 0.5280898876404494
-Recall: 0.9038461538461539
-F1:  0.6666666666666666
