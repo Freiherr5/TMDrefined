@@ -240,7 +240,7 @@ class AAwindowrizer:
 
         # threshold dependent, meaning that negative labels at thresh=3 need to be inverse
         if weighting:
-            df_label["weights"] = np.ones(df_label.shape[0], dtype=int).tolist()
+            df_label["weights"] = np.zeros(df_label.shape[0], dtype=int).tolist()
 
         for query in df_label_search_list:
             # slice df_label

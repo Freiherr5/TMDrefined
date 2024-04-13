@@ -34,9 +34,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # get training labels
     # __________________________________________________________________________________________________________________
     path_labels = f"{path}{sep}_train_3_models_data{sep}"
-    n_labels_paths = glob.glob(f"{path_labels}mean_weight_balance{sep}mean_N_balance{sep}*.xlsx")  # test, then train
+    n_labels_paths = glob.glob(f"{path_labels}mean_weight_balance0{sep}mean_N{sep}*.xlsx")  # test, then train
     print(n_labels_paths)
-    c_labels_paths = glob.glob(f"{path_labels}mean_weight_balance{sep}mean_C_balance{sep}*.xlsx")  # test, then train
+    c_labels_paths = glob.glob(f"{path_labels}mean_weight_balance0{sep}mean_C{sep}*.xlsx")  # test, then train
     scales_path = f"{path_labels}KMeans_scales_norm.xlsx"
 
     # get all DataFrame
