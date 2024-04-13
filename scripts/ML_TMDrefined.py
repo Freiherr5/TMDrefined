@@ -55,10 +55,10 @@ class ForestTMDrefind:
 
         # parameter distribution
         if param_grid is None:
-            param_grid = {'n_estimators': np.linspace(500, 900, 20, dtype=int),
-                          'max_depth': np.linspace(10, 100, 20, dtype=int),
-                          'max_leaf_nodes': np.linspace(30, 300, 30, dtype=int),
-                          'max_samples': [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0],
+            param_grid = {'n_estimators': np.linspace(300, 400, 2, dtype=int),
+                          'max_depth': np.linspace(2, 3, 2, dtype=int),
+                          'max_leaf_nodes': np.linspace(4, 10, 7, dtype=int),
+                          'max_samples': [0.6, 0.8, 1.0],
                           'class_weight': ["balanced_subsample"],
                           'bootstrap': [True],
                           'n_jobs': [n_jobs],

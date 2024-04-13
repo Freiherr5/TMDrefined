@@ -34,9 +34,10 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # get training labels
     # __________________________________________________________________________________________________________________
     path_labels = f"{path}{sep}_train_3_models_data{sep}"
-    n_labels_paths = glob.glob(f"{path_labels}mean_weight_balance0{sep}mean_N{sep}*.xlsx")  # test, then train
+    n_labels_paths = sorted(glob.glob(f"{path_labels}mean_weight_2{sep}mean_N{sep}*.xlsx"))  # test, then train
     print(n_labels_paths)
-    c_labels_paths = glob.glob(f"{path_labels}mean_weight_balance0{sep}mean_C{sep}*.xlsx")  # test, then train
+    c_labels_paths = sorted(glob.glob(f"{path_labels}mean_weight_2{sep}mean_C{sep}*.xlsx"))  # test, then train
+    print(c_labels_paths)
     scales_path = f"{path_labels}KMeans_scales_norm.xlsx"
 
     # get all DataFrame
@@ -60,7 +61,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'n_estimators': [600],
                     'n_jobs': [-1]}
 
-    if "weightsx" in test_train_n_list_df[0].columns.tolist():
+    if "weights" in test_train_n_list_df[0].columns.tolist():
         weight_n_df = test_train_n_list_df[0]["weights"]
     else:
         weight_n_df = None
@@ -84,7 +85,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'n_estimators': [640],
                     'n_jobs': [-1]}
 
-    if "weightsx" in test_train_c_list_df[0].columns.tolist():
+    if "weights" in test_train_c_list_df[0].columns.tolist():
         weight_c_df = test_train_c_list_df[0]["weights"]
     else:
         weight_c_df = None
@@ -153,4 +154,4 @@ if __name__ == "__main__":
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="mean_test_weights_balance")
+        job_name="mean_2_run")
