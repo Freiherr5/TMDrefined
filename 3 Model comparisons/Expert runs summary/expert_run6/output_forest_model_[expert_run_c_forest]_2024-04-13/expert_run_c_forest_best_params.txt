@@ -1,0 +1,1 @@
+{'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [3], 'max_leaf_nodes': [5], 'max_samples': [0.6], 'n_estimators': [300], 'n_jobs': [-1]}
