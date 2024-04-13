@@ -33,16 +33,17 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
     # get training labels
     # __________________________________________________________________________________________________________________
-    path_labels = f"{path}{sep}_training_data{sep}"
-    n_labels_paths = glob.glob(f"{path_labels}test_train_N{sep}*.xlsx")  # test, then train
-    c_labels_paths = glob.glob(f"{path_labels}test_train_C{sep}*.xlsx")  # test, then train
-    top60_brei_path = f"{path_labels}top60{sep}norm_top_of_60.xlsx"
+    path_labels = f"{path}{sep}_train_3_models_data{sep}"
+    n_labels_paths = glob.glob(f"{path_labels}mean_weight_balance{sep}mean_N_balance{sep}*.xlsx")  # test, then train
+    print(n_labels_paths)
+    c_labels_paths = glob.glob(f"{path_labels}mean_weight_balance{sep}mean_C_balance{sep}*.xlsx")  # test, then train
+    scales_path = f"{path_labels}KMeans_scales_norm.xlsx"
 
     # get all DataFrame
     # __________________________________________________________________________________________________________________
     test_train_n_list_df = []
     test_train_c_list_df = []
-    top60_1_features = pd.read_excel(top60_brei_path).set_index("AA").columns.tolist()  # features
+    df_scales = pd.read_excel(scales_path).set_index("AA").columns.tolist()  # features
     for paths, lists in zip([n_labels_paths, c_labels_paths], [test_train_n_list_df, test_train_c_list_df]):
         for sub_paths in paths:
             df_labels = pd.read_excel(sub_paths).set_index("ID")
@@ -58,14 +59,20 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'max_samples': [0.3],
                     'n_estimators': [600],
                     'n_jobs': [-1]}
-    n_forest = ml_ref.ForestTMDrefind.make_forest(test_train_n_list_df[1][['window_left', 'window_right']],
-                                                  test_train_n_list_df[1]["label"], scales_list=top60_1_features,
-                                                  job_name=f"{job_name}_n_forest", n_jobs=-1,
+
+    if "weightsx" in test_train_n_list_df[0].columns.tolist():
+        weight_n_df = test_train_n_list_df[0]["weights"]
+    else:
+        weight_n_df = None
+
+    n_forest = ml_ref.ForestTMDrefind.make_forest(test_train_n_list_df[0][['window_left', 'window_right']],
+                                                  test_train_n_list_df[0]["label"], df_train_weights=weight_n_df,
+                                                  scales_list=df_scales, job_name=f"{job_name}_n_forest", n_jobs=-1,
                                                   param_grid=param_grid_n, model_retrains=30)
     n_forest.hyperparameter_summary(save_table=True)
     n_forest.feature_importance()
-    n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[0][['window_left', 'window_right']])
-    n_forest.test_predict_quality(label_test=test_train_n_list_df[0]["label"], label_pred=n_test_labels_pred[0],
+    n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[1][['window_left', 'window_right']])
+    n_forest.test_predict_quality(label_test=test_train_n_list_df[1]["label"], label_pred=n_test_labels_pred[0],
                                   cm_save=True)
 
     param_grid_c = {'bootstrap': [True],
@@ -76,14 +83,20 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'max_samples': [0.3],
                     'n_estimators': [640],
                     'n_jobs': [-1]}
-    c_forest = ml_ref.ForestTMDrefind.make_forest(test_train_c_list_df[1][['window_left', 'window_right']],
-                                                  test_train_c_list_df[1]["label"], scales_list=top60_1_features,
-                                                  job_name=f"{job_name}_c_forest", n_jobs=-1,
+
+    if "weightsx" in test_train_c_list_df[0].columns.tolist():
+        weight_c_df = test_train_c_list_df[0]["weights"]
+    else:
+        weight_c_df = None
+
+    c_forest = ml_ref.ForestTMDrefind.make_forest(test_train_c_list_df[0][['window_left', 'window_right']],
+                                                  test_train_c_list_df[0]["label"], df_train_weights=weight_c_df,
+                                                  scales_list=df_scales, job_name=f"{job_name}_c_forest", n_jobs=-1,
                                                   param_grid=param_grid_c, model_retrains=30, start_tmd=False)
     c_forest.hyperparameter_summary(save_table=True)
     c_forest.feature_importance()
-    c_test_labels_pred = c_forest.predict_labels(test_train_c_list_df[0][['window_left', 'window_right']])
-    c_forest.test_predict_quality(label_test=test_train_c_list_df[0]["label"], label_pred=c_test_labels_pred[0],
+    c_test_labels_pred = c_forest.predict_labels(test_train_c_list_df[1][['window_left', 'window_right']])
+    c_forest.test_predict_quality(label_test=test_train_c_list_df[1]["label"], label_pred=c_test_labels_pred[0],
                                   cm_save=True)
 
     # generate new DataFrame
@@ -135,9 +148,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
 if __name__ == "__main__":
     # "/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx"
-    df_input = pd.read_excel("/home/freiherr/Downloads/Breimann et al_Supplementary Tables/Breimann et al_Supplementary Tables/Supplementary Table 2_Datasets.xlsx", "SUBSTRATES").set_index("name")
+    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/_train_3_models_data/mean_weight/arithmetic_mean_all_annots_for_refining.xlsx").set_index("entry").head(10)
     run(df=df_input,
-        start_pos_col="tmd_start",
-        stop_pos_col="tmd_stop",
+        start_pos_col="start_pos_TMD",
+        stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="y-Sec_SUB")
+        job_name="mean_test_weights_balance")

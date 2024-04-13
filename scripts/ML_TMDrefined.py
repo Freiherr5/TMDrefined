@@ -40,7 +40,8 @@ class ForestTMDrefind:
     @classmethod
     @timingmethod
     def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
-                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None):
+                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None,
+                    df_train_weights=None):
 
         if isinstance(train_data, list):
             train_scale_df, train_label_df = train_data[0], train_data[1]
@@ -64,11 +65,15 @@ class ForestTMDrefind:
                           'criterion': ["entropy"]
                           }
 
+        if df_train_weights is None:
+            array_train_weights = np.ones(df_train_windows.shape[0])
+        else:
+            array_train_weights = df_train_weights.to_numpy()
+
         search_cv = (HalvingGridSearchCV(clf, param_grid, resource='n_samples', max_resources="auto", cv=5,
-                                         scoring='neg_mean_absolute_error').fit(train_scale_df.
-                                                                                to_numpy().tolist(),
-                                                                                train_label_df.
-                                                                                to_numpy().tolist()))
+                     scoring='neg_mean_absolute_error').fit(train_scale_df.to_numpy().tolist(),
+                     train_label_df.to_numpy().tolist(), sample_weight=array_train_weights))
+
         path_file, path_module, sep = find_folderpath()
         date_today = date.today()
         path_forest = f"{path_file}{sep}output_forest_model_[{job_name}]_{date_today}"
@@ -93,7 +98,8 @@ class ForestTMDrefind:
         clf_model_list = []
         while i < model_retrains:
             clf_best = RandomForestClassifier(**best_params)
-            clf_best = clf_best.fit(train_scale_df.to_numpy().tolist(), train_label_df.to_numpy().tolist())
+            clf_best = clf_best.fit(train_scale_df.to_numpy().tolist(), train_label_df.to_numpy().tolist(),
+                                    sample_weight=array_train_weights)
             clf_model_list.append(clf_best)
             i+=1
         # print best parameters
@@ -187,7 +193,7 @@ class ForestTMDrefind:
                                              mode=self.mode)[0]
 
         list_proba = []
-        for models in self.model_list:                                                                                  # needsfixing since dataframe!
+        for models in self.model_list:
             preds_proba_window = models.predict_proba(train_scale_df.to_numpy().tolist())
             pos_proba_pre = [pred[1] for pred in preds_proba_window]
             list_proba.append(pos_proba_pre)

@@ -264,7 +264,12 @@ class AAwindowrizer:
                         id_df_label = list_id[index_df_label_list[list_available_pos.index(int(value))]]
                         df_label.loc[id_df_label, "label"] = 1
                         if weighting:
-                            df_label.loc[id_df_label, "weights"] = count
+                            df_label.loc[id_df_label, "weights"] = int(count)
+                else:  # when negative label!
+                    if value in list_available_pos:  # is the seq pos in the label list?
+                        if weighting:
+                            id_df_label = list_id[index_df_label_list[list_available_pos.index(int(value))]]
+                            df_label.loc[id_df_label, "weights"] = int(df_label_slice.shape[0]-count)
 
         # remove all entries that are fully 0
         df_label_search_list = list(dict.fromkeys([str(index).split("__")[0] for index in df_label.index.tolist()]))
