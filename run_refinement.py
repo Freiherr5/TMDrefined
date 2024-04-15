@@ -34,9 +34,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # get training labels
     # __________________________________________________________________________________________________________________
     path_labels = f"{path}{sep}_train_3_models_data{sep}"
-    n_labels_paths = sorted(glob.glob(f"{path_labels}mean_weight_2{sep}mean_N{sep}*.xlsx"))  # test, then train
+    n_labels_paths = sorted(glob.glob(f"{path_labels}pm_mem{sep}mem_N{sep}*.xlsx"))  # test, then train
     print(n_labels_paths)
-    c_labels_paths = sorted(glob.glob(f"{path_labels}mean_weight_2{sep}mean_C{sep}*.xlsx"))  # test, then train
+    c_labels_paths = sorted(glob.glob(f"{path_labels}pm_mem{sep}mem_C{sep}*.xlsx"))  # test, then train
     print(c_labels_paths)
     scales_path = f"{path_labels}KMeans_scales_norm.xlsx"
 
@@ -52,6 +52,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
     # fit the models
     # __________________________________________________________________________________________________________________
+
+    param_grid_n = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [8], 'max_leaf_nodes': [10], 'max_samples': [0.4], 'n_estimators': [500], 'n_jobs': [-1]}
+    """
     param_grid_n = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
@@ -60,7 +63,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'max_samples': [0.3],
                     'n_estimators': [600],
                     'n_jobs': [-1]}
-
+    """
     if "weights" in test_train_n_list_df[0].columns.tolist():
         weight_n_df = test_train_n_list_df[0]["weights"]
     else:
@@ -75,7 +78,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[1][['window_left', 'window_right']])
     n_forest.test_predict_quality(label_test=test_train_n_list_df[1]["label"], label_pred=n_test_labels_pred[0],
                                   cm_save=True)
-
+    param_grid_c = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [6], 'max_leaf_nodes': [20], 'max_samples': [0.3], 'n_estimators': [500], 'n_jobs': [-1]}
+    """
     param_grid_c = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
@@ -83,7 +87,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'max_leaf_nodes': [260],
                     'max_samples': [0.3],
                     'n_estimators': [640],
-                    'n_jobs': [-1]}
+                    'n_jobs': [-1]}"""
 
     if "weights" in test_train_c_list_df[0].columns.tolist():
         weight_c_df = test_train_c_list_df[0]["weights"]
@@ -154,4 +158,4 @@ if __name__ == "__main__":
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="mean_2_run")
+        job_name="mem_sum_run")

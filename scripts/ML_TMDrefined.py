@@ -40,7 +40,7 @@ class ForestTMDrefind:
     @classmethod
     @timingmethod
     def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
-                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None,
+                    n_jobs=1, mode="sum", param_grid=None, model_retrains=10, train_data: list = None,
                     df_train_weights=None):
 
         if isinstance(train_data, list):
