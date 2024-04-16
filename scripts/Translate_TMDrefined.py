@@ -15,7 +15,8 @@ path_file, path_module, sep = find_folderpath()
 
 @timingmethod
 def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Series) = None,
-                        scale_df_filter: list = None, mode: str = "weighted", weight_set: (int, float) = 3):
+                        scale_df_filter: list = None, mode: str = "weighted", weight_start: (int, float) = 3,
+                        weight_step: (int, float) = 1):
     # check function block
     # ______________________________________________________________________________
 
@@ -25,10 +26,20 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Se
         mode = "weighted"
 
     # check validity of weight
-    if isinstance(weight_set, (int, float)) & (weight_set > 1):
-        pass
+    if weight_start is not None:
+        if isinstance(weight_start, (int, float)) & (weight_start > 1):
+            pass
+        else:
+            weight_start = 3
     else:
-        weight_set = 3
+        weight_start = 3
+    if weight_step is not None:
+        if isinstance(weight_step, (int, float)) & (weight_step >= 0):
+            pass
+        else:
+            weight_step = 1
+    else:
+        weight_step = 1
 
     # check correct label_df
     if not isinstance(feature_df, pd.DataFrame):
@@ -93,8 +104,7 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Se
                     if flag_reverse == 1:
                         part_list.reverse()
                         flag_reverse = 0  # turn flag off
-                    list_ln_linspace = np.linspace(1.2, 2 + len(part), num=len(part))
-                    #list_ln_linspace = np.linspace(weight_set, weight_set+len(part), num=len(part))
+                    list_ln_linspace = np.linspace(weight_start, weight_start+weight_step*(len(part)-1), num=len(part))
                     list_ln = [math.log(num) for num in list_ln_linspace]
                     value_pre = (sum([(letters/ln) for letters, ln in zip(part_list, list_ln)]))
                     if value_pre == 0:

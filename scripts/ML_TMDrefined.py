@@ -41,7 +41,7 @@ class ForestTMDrefind:
     @timingmethod
     def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
                     n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None,
-                    df_train_weights=None, weight_set=None):
+                    df_train_weights=None, weight_start=None, weight_step=None):
 
         if isinstance(train_data, list):
             train_scale_df, train_label_df = train_data[0], train_data[1]
@@ -49,7 +49,7 @@ class ForestTMDrefind:
             train_scale_df, train_label_df = aa_numeric_by_scale(feature_df=df_train_windows,
                                                                  label_df=df_train_labels,
                                                                  scale_df_filter=scales_list, mode=mode,
-                                                                 weight_set=weight_set)
+                                                                 weight_start=weight_start, weight_step=weight_step)
 
         # initialize the RandomForestClassifier as clf
         clf = RandomForestClassifier()
@@ -341,4 +341,3 @@ class ForestTMDrefind:
             plt.savefig(f"{self.path_forest}{sep}{self.job_name}_{entry_tag}_proba_intersect_{date_today}.png", dpi=400,
                         bbox_inches="tight")
         return [entry_tag, best_pos, df_preds_proba]
-
