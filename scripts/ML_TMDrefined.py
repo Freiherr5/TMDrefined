@@ -40,15 +40,16 @@ class ForestTMDrefind:
     @classmethod
     @timingmethod
     def make_forest(cls, df_train_windows, df_train_labels, scales_list, job_name, start_tmd=True,
-                    n_jobs=1, mode="sum", param_grid=None, model_retrains=10, train_data: list = None,
-                    df_train_weights=None):
+                    n_jobs=1, mode="weighted", param_grid=None, model_retrains=10, train_data: list = None,
+                    df_train_weights=None, weight_set=None):
 
         if isinstance(train_data, list):
             train_scale_df, train_label_df = train_data[0], train_data[1]
         else:
             train_scale_df, train_label_df = aa_numeric_by_scale(feature_df=df_train_windows,
                                                                  label_df=df_train_labels,
-                                                                 scale_df_filter=scales_list, mode=mode)
+                                                                 scale_df_filter=scales_list, mode=mode,
+                                                                 weight_set=weight_set)
 
         # initialize the RandomForestClassifier as clf
         clf = RandomForestClassifier()

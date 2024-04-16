@@ -93,7 +93,8 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Se
                     if flag_reverse == 1:
                         part_list.reverse()
                         flag_reverse = 0  # turn flag off
-                    list_ln_linspace = np.linspace(weight_set, weight_set+len(part), num=len(part))
+                    list_ln_linspace = np.linspace(1.2, 2 + len(part), num=len(part))
+                    #list_ln_linspace = np.linspace(weight_set, weight_set+len(part), num=len(part))
                     list_ln = [math.log(num) for num in list_ln_linspace]
                     value_pre = (sum([(letters/ln) for letters, ln in zip(part_list, list_ln)]))
                     if value_pre == 0:

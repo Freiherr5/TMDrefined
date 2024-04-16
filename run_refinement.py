@@ -34,9 +34,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # get training labels
     # __________________________________________________________________________________________________________________
     path_labels = f"{path}{sep}_train_3_models_data{sep}"
-    n_labels_paths = sorted(glob.glob(f"{path_labels}pm_mem{sep}mem_N{sep}*.xlsx"))  # test, then train
+    n_labels_paths = sorted(glob.glob(f"{path_labels}expert_curated{sep}expert_N{sep}*.xlsx"))  # test, then train
     print(n_labels_paths)
-    c_labels_paths = sorted(glob.glob(f"{path_labels}pm_mem{sep}mem_C{sep}*.xlsx"))  # test, then train
+    c_labels_paths = sorted(glob.glob(f"{path_labels}expert_curated{sep}expert_C{sep}*.xlsx"))  # test, then train
     print(c_labels_paths)
     scales_path = f"{path_labels}KMeans_scales_norm.xlsx"
 
@@ -54,17 +54,19 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # __________________________________________________________________________________________________________________
 
     param_grid_n = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [8], 'max_leaf_nodes': [10], 'max_samples': [0.4], 'n_estimators': [500], 'n_jobs': [-1]}
-    """
-    param_grid_n = {'bootstrap': [True],
+
+    """param_grid_n = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
                     'max_depth': [40],
                     'max_leaf_nodes': [250],
                     'max_samples': [0.3],
                     'n_estimators': [600],
-                    'n_jobs': [-1]}
-    """
-    if "weights" in test_train_n_list_df[0].columns.tolist():
+                    'n_jobs': [-1]}"""
+
+    weight_set_n = 1.05
+
+    if "weightsx" in test_train_n_list_df[0].columns.tolist():
         weight_n_df = test_train_n_list_df[0]["weights"]
     else:
         weight_n_df = None
@@ -72,15 +74,15 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     n_forest = ml_ref.ForestTMDrefind.make_forest(test_train_n_list_df[0][['window_left', 'window_right']],
                                                   test_train_n_list_df[0]["label"], df_train_weights=weight_n_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_n_forest", n_jobs=-1,
-                                                  param_grid=param_grid_n, model_retrains=30)
+                                                  param_grid=param_grid_n, model_retrains=30, weight_set=weight_set_n)
     n_forest.hyperparameter_summary(save_table=True)
     n_forest.feature_importance()
     n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[1][['window_left', 'window_right']])
     n_forest.test_predict_quality(label_test=test_train_n_list_df[1]["label"], label_pred=n_test_labels_pred[0],
                                   cm_save=True)
     param_grid_c = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [6], 'max_leaf_nodes': [20], 'max_samples': [0.3], 'n_estimators': [500], 'n_jobs': [-1]}
-    """
-    param_grid_c = {'bootstrap': [True],
+
+    """param_grid_c = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
                     'max_depth': [26],
@@ -89,7 +91,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                     'n_estimators': [640],
                     'n_jobs': [-1]}"""
 
-    if "weights" in test_train_c_list_df[0].columns.tolist():
+    weight_set_c = 1.05
+
+    if "weightsx" in test_train_c_list_df[0].columns.tolist():
         weight_c_df = test_train_c_list_df[0]["weights"]
     else:
         weight_c_df = None
@@ -97,7 +101,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     c_forest = ml_ref.ForestTMDrefind.make_forest(test_train_c_list_df[0][['window_left', 'window_right']],
                                                   test_train_c_list_df[0]["label"], df_train_weights=weight_c_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_c_forest", n_jobs=-1,
-                                                  param_grid=param_grid_c, model_retrains=30, start_tmd=False)
+                                                  param_grid=param_grid_c, model_retrains=30, start_tmd=False,
+                                                  weight_set=weight_set_c)
     c_forest.hyperparameter_summary(save_table=True)
     c_forest.feature_importance()
     c_test_labels_pred = c_forest.predict_labels(test_train_c_list_df[1][['window_left', 'window_right']])
@@ -153,9 +158,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
 if __name__ == "__main__":
     # "/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx"
-    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/_train_3_models_data/mean_weight/arithmetic_mean_all_annots_for_refining.xlsx").set_index("entry").head(10)
+    df_input = pd.read_excel("(Non-)Substrate_UniProt.xlsx").set_index("entry")
     run(df=df_input,
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="mem_sum_run")
+        job_name="expert_Non-SUB")
