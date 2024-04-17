@@ -110,7 +110,7 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Se
                     if value_pre == 0:
                         value = 0       # avoid ZeroDivision Error
                     else:
-                        value = value_pre/sum(list_ln)
+                        value = value_pre*sum(list_ln)
                 parts_list.append(value)
             list_intermediate_scale_translate.append(parts_list[0]-parts_list[1])
         list_intermediate_scale_translate.append(index_label)

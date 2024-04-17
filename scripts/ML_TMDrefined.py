@@ -208,6 +208,15 @@ class ForestTMDrefind:
                 pred_labels.append(0)
         return pred_labels, proba_result, index_list
 
+    @staticmethod
+    def test_predict_benchmark(label_test, label_pred):
+        # general info about performance
+        accuracy = balanced_accuracy_score(label_test, label_pred)
+        precision = precision_score(label_test, label_pred, average="weighted")
+        recall = recall_score(label_test, label_pred, average="weighted")
+        f1 = f1_score(label_test, label_pred, average="weighted")
+        return accuracy, precision, recall, f1
+
     def test_predict_quality(self, label_test, label_pred, cm_save=False):
 
         # general info about performance

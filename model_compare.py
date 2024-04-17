@@ -5,8 +5,6 @@ import glob
 # visualize
 import matplotlib.pyplot as plt
 import seaborn as sns
-# ML
-import scripts.ML_TMDrefined as ml_ref
 
 
 
@@ -61,7 +59,7 @@ def compare_predictions_heatmap(job_name: str, dict_dfs: dict, compare_column: s
     # heatmap generation
     # plotting a triangle correlation heatmap
     plt.rcParams["font.weight"] = "semibold"
-    dataplot = sns.heatmap(data_df, annot=True, mask= np.array(mask, dtype=bool), center=0,
+    dataplot = sns.heatmap(data_df, annot=True, mask=np.array(mask, dtype=bool), center=0,
                            vmin=0, vmax=1, cmap=cmap, linewidths=3, linecolor='white',
                            fmt=".2f")
     plt.title(f"{job_name}\n", fontsize=14, fontweight="bold")
