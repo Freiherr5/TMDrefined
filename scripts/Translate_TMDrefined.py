@@ -106,11 +106,12 @@ def aa_numeric_by_scale(feature_df: pd.DataFrame, label_df: (pd.DataFrame, pd.Se
                         flag_reverse = 0  # turn flag off
                     list_ln_linspace = np.linspace(weight_start, weight_start+weight_step*(len(part)-1), num=len(part))
                     list_ln = [math.log(num) for num in list_ln_linspace]
+                    list_ln_rez = [1/math.log(num) for num in list_ln_linspace]
                     value_pre = (sum([(letters/ln) for letters, ln in zip(part_list, list_ln)]))
                     if value_pre == 0:
                         value = 0       # avoid ZeroDivision Error
                     else:
-                        value = value_pre*sum(list_ln)
+                        value = value_pre/sum(list_ln_rez)
                 parts_list.append(value)
             list_intermediate_scale_translate.append(parts_list[0]-parts_list[1])
         list_intermediate_scale_translate.append(index_label)

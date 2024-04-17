@@ -54,8 +54,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     # __________________________________________________________________________________________________________________
 
     param_grid_n = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [8], 'max_leaf_nodes': [10], 'max_samples': [0.4], 'n_estimators': [500], 'n_jobs': [-1]}
-
-    """param_grid_n = {'bootstrap': [True],
+    """
+    param_grid_n = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
                     'max_depth': [40],
@@ -72,15 +72,16 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     n_forest = ml_ref.ForestTMDrefind.make_forest(test_train_n_list_df[0][['window_left', 'window_right']],
                                                   test_train_n_list_df[0]["label"], df_train_weights=weight_n_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_n_forest", n_jobs=-1,
-                                                  param_grid=param_grid_n, model_retrains=30)
+                                                  param_grid=param_grid_n, model_retrains=30,
+                                                  weight_start=1.5, weight_step=3)
     n_forest.hyperparameter_summary(save_table=True)
     n_forest.feature_importance()
     n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[1][['window_left', 'window_right']])
     n_forest.test_predict_quality(label_test=test_train_n_list_df[1]["label"], label_pred=n_test_labels_pred[0],
                                   cm_save=True)
     param_grid_c = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [6], 'max_leaf_nodes': [20], 'max_samples': [0.3], 'n_estimators': [500], 'n_jobs': [-1]}
-
-    """param_grid_c = {'bootstrap': [True],
+    """
+    param_grid_c = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
                     'max_depth': [26],
@@ -97,7 +98,8 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
     c_forest = ml_ref.ForestTMDrefind.make_forest(test_train_c_list_df[0][['window_left', 'window_right']],
                                                   test_train_c_list_df[0]["label"], df_train_weights=weight_c_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_c_forest", n_jobs=-1,
-                                                  param_grid=param_grid_c, model_retrains=30, start_tmd=False)
+                                                  param_grid=param_grid_c, model_retrains=30, start_tmd=False,
+                                                  weight_start=1.01, weight_step=20)
     c_forest.hyperparameter_summary(save_table=True)
     c_forest.feature_importance()
     c_test_labels_pred = c_forest.predict_labels(test_train_c_list_df[1][['window_left', 'window_right']])
@@ -153,9 +155,9 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
 if __name__ == "__main__":
     # "/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx"
-    df_input = pd.read_excel("Heatmap_compare_non_sub/(Non-)Substrate_UniProt.xlsx").set_index("entry")
+    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/Uniprot_refining/uniprot_N_out_datasets.xlsx").set_index("entry")[:2]
     run(df=df_input,
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
         seq_col="sequence",
-        job_name="expert_testi")
+        job_name="expert_uniprot_refining")
