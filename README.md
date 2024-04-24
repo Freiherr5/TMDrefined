@@ -20,5 +20,5 @@ TMD-annotation of an initial guess (e.g. via UniProt).
 ### Note
 
 This is still an early prototype.
-A rework of the algorithms structure and its hyperparameter optimizatio is planned
+A rework of the algorithms structure and its hyperparameter optimization is planned
 
