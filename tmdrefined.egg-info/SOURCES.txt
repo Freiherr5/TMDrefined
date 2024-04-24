@@ -1,10 +1,10 @@
 README.md
 setup.py
-scripts/AA_window.py
-scripts/ML_TMDrefined.py
-scripts/StandardConfig.py
-scripts/Translate_TMDrefined.py
-scripts/__init__.py
+tmdrefined/AA_window.py
+tmdrefined/ML_TMDrefined.py
+tmdrefined/StandardConfig.py
+tmdrefined/Translate_TMDrefined.py
+tmdrefined/__init__.py
 tmdrefined.egg-info/PKG-INFO
 tmdrefined.egg-info/SOURCES.txt
 tmdrefined.egg-info/dependency_links.txt

@@ -4,3 +4,4 @@ graphviz~=0.20.1
 matplotlib~=3.8.3
 scikit-learn~=1.4.1.post1
 setuptools~=67.7.2
+seaborn~=0.12.0

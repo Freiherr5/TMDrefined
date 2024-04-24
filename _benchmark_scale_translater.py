@@ -1,8 +1,7 @@
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-import scripts.ML_TMDrefined as ml_ref
-import scripts.StandardConfig as stdc
+import tmdrefined.ML_TMDrefined as ml_ref
+import tmdrefined.StandardConfig as stdc
 import seaborn as sns
 
 
@@ -34,7 +33,7 @@ def run_benchmark_translater(job_name: str, df_train: pd.DataFrame, df_test: pd.
     # heatmap generation
     # plotting a triangle correlation heatmap
     cmap = sns.color_palette('magma', as_cmap=True)
-    dataplot = sns.heatmap(data_df, annot=True, center=0.75, vmin=0.5, vmax=1, cmap=cmap, linewidths=3,
+    dataplot = sns.heatmap(data_df, annot=True, cmap=cmap, linewidths=3,  # center=0.75, vmin=0.5, vmax=1,
                            linecolor='white', fmt=".2f")
     plt.title(f"{job_name}\n", fontsize=14, fontweight="bold")
     dataplot.set_xticklabels(weight_step)
@@ -44,18 +43,20 @@ def run_benchmark_translater(job_name: str, df_train: pd.DataFrame, df_test: pd.
     plt.savefig(f"{job_name}.png", bbox_inches="tight", dpi=300)
 
 if __name__ == "__main__":
-    param_grid_n = {'bootstrap': [True],
+    """param_grid_n = {'bootstrap': [True],
                     'class_weight': ['balanced_subsample'],
                     'criterion': ['entropy'],
                     'max_depth': [40],
                     'max_leaf_nodes': [250],
                     'max_samples': [0.3],
                     'n_estimators': [600],
-                    'n_jobs': [-1]}
+                    'n_jobs': [-1]}"""
+
+    param_grid = {'bootstrap': [True], 'class_weight': ['balanced_subsample'], 'criterion': ['entropy'], 'max_depth': [6], 'max_leaf_nodes': [20], 'max_samples': [0.3], 'n_estimators': [500], 'n_jobs': [-1]}
 
     job_name = "Scale translation: weight-factors influence on performance (f1 score)"
-    df_train_test = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/_train_3_models_data/mean_weight_easy8/mean_N/mean_test_df_N_balance8.xlsx")
-    df_test_test = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/_train_3_models_data/mean_weight_easy8/mean_N/mean_val_df_N_balance8.xlsx")
+    df_train_test = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/expert_curated/expert_N/expert_test_df_N.xlsx")
+    df_test_test = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/expert_curated/expert_N/expert_val_df_N.xlsx")
 
-    run_benchmark_translater(job_name, df_train_test, df_test_test, param_grid_n)
+    run_benchmark_translater(job_name, df_train_test, df_test_test, param_grid)
 

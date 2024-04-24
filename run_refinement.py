@@ -2,9 +2,9 @@
 import glob
 import pandas as pd
 # ml imports
-import scripts.ML_TMDrefined as ml_ref
-import scripts.StandardConfig as stdc
-from scripts.Translate_TMDrefined import aa_numeric_by_scale
+import tmdrefined.ML_TMDrefined as ml_ref
+import tmdrefined.StandardConfig as stdc
+from tmdrefined.Translate_TMDrefined import aa_numeric_by_scale
 
 
 def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  job_name: str,
@@ -73,7 +73,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                                                   test_train_n_list_df[0]["label"], df_train_weights=weight_n_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_n_forest", n_jobs=-1,
                                                   param_grid=param_grid_n, model_retrains=30,
-                                                  weight_start=1.5, weight_step=3)
+                                                  weight_start=3, weight_step=10)
     n_forest.hyperparameter_summary(save_table=True)
     n_forest.feature_importance()
     n_test_labels_pred = n_forest.predict_labels(test_train_n_list_df[1][['window_left', 'window_right']])
@@ -99,7 +99,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
                                                   test_train_c_list_df[0]["label"], df_train_weights=weight_c_df,
                                                   scales_list=df_scales, job_name=f"{job_name}_c_forest", n_jobs=-1,
                                                   param_grid=param_grid_c, model_retrains=30, start_tmd=False,
-                                                  weight_start=1.01, weight_step=20)
+                                                  weight_start=1.1, weight_step=0.1)
     c_forest.hyperparameter_summary(save_table=True)
     c_forest.feature_importance()
     c_test_labels_pred = c_forest.predict_labels(test_train_c_list_df[1][['window_left', 'window_right']])
@@ -155,7 +155,7 @@ def run(df: pd.DataFrame, start_pos_col: str, stop_pos_col: str, seq_col: str,  
 
 if __name__ == "__main__":
     # "/home/freiherr/PycharmProjects/TMDrefined/_training_data/arithmetic_mean_all_annots_for_refining.xlsx"
-    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/Uniprot_refining/uniprot_N_out_datasets.xlsx").set_index("entry")[:2]
+    df_input = pd.read_excel("/home/freiherr/PycharmProjects/TMDrefined/Uniprot_refining/uniprot_N_out_datasets.xlsx").set_index("entry")
     run(df=df_input,
         start_pos_col="start_pos_TMD",
         stop_pos_col="stop_pos_TMD",
